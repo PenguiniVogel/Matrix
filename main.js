@@ -26,6 +26,11 @@ function graphics() {
                     if(update(column)) {
                         column.push(createItem(x));
                     }
+					
+					graphics.globalAlpha = 0.005;
+					graphics.fillStyle = '#000000';
+					graphics.fillRect(0, 0, window.innerWidth, window.innerHeight);
+					graphics.globalAlpha = 1;
 
                     column = column.filter(function (item) {
                         return item.eraseY <= window.innerHeight;
@@ -44,8 +49,8 @@ function graphics() {
             var item = column[i];
 
             if (item.delay <= 0) {
-                graphics.fillStyle = '#44ff00';
-                graphics.fillText(chars[Math.floor(Math.random() * chars.length)], item.x, item.letterY);
+				graphics.strokeStyle = '#44ff00';
+				graphics.strokeText(chars[Math.floor(Math.random() * chars.length)], item.x, item.letterY);
 
                 item.letterY += 12;
 
