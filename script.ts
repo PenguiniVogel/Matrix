@@ -52,6 +52,28 @@ const graphics = (): void => {
 
     const chars: String = 'ｦｱｳｴｵｶｷｹｺｻｼｽｾｿﾀﾂﾃﾅﾆﾇﾈﾊﾋﾎﾏﾐﾑﾒﾓﾔﾕﾗﾘﾜ日(+*;)-|2589Z';
 
+    interface IColumn {
+        x       : number,
+        letters : number,
+        max     : number,
+        letterY : number,
+        erasing : boolean,
+        eraseY  : number,
+        delay   : number
+    }
+
+    const createItem = (x: number): IColumn => {
+        return {
+            x      : x,
+            letters: 0,
+            max    : Math.floor(Math.random() * 8) + 2,
+            letterY: 10,
+            erasing: false,
+            eraseY : 0,
+            delay  : Math.floor(Math.random() * 8000) + 2000
+        };
+    };
+
     const create = (x): void => {
         let column: IColumn[] = [createItem(x)];
 
@@ -110,28 +132,6 @@ const graphics = (): void => {
         }
 
         return needsNew;
-    };
-
-    interface IColumn {
-        x       : number,
-        letters : number,
-        max     : number,
-        letterY : number,
-        erasing : boolean,
-        eraseY  : number,
-        delay   : number
-    }
-
-    const createItem = (x: number): IColumn => {
-        return {
-            x      : x,
-            letters: 0,
-            max    : Math.floor(Math.random() * 8) + 2,
-            letterY: 10,
-            erasing: false,
-            eraseY : 0,
-            delay  : Math.floor(Math.random() * 8000) + 2000
-        };
     };
 };
 
