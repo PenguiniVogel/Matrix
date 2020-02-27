@@ -22,13 +22,13 @@
  SOFTWARE.
  */
 
-function graphics() {
+const graphics = (): void => {
     const interval: number = 250;
 
     const canvas: HTMLCanvasElement = <HTMLCanvasElement>document.getElementById('matrix-canvas');
     const graphics: CanvasRenderingContext2D = canvas.getContext('2d');
 
-    const resize = (e: Event) => {
+    const resize = (e: Event): void => {
         canvas.width = window.innerWidth;
         canvas.height = window.innerHeight;
     };
@@ -38,12 +38,12 @@ function graphics() {
 
     graphics.scale(1.2, 1.2);
 
-    const paintRect = (x: number, y: number, width: number, height: number) => {
+    const paintRect = (x: number, y: number, width: number, height: number): void => {
         graphics.fillStyle = '#000000';
         graphics.fillRect(x, y, width, height);
     };
 
-    const paintDot = (x: number, y: number) => {
+    const paintDot = (x: number, y: number): void => {
         graphics.fillStyle = '#44ff00';
         graphics.globalAlpha = Math.max(0.05, Math.min(0.5, Math.random()));
         graphics.fillRect(x + 2, y + 4, 2, 2);
@@ -52,7 +52,7 @@ function graphics() {
 
     const chars: String = 'ｦｱｳｴｵｶｷｹｺｻｼｽｾｿﾀﾂﾃﾅﾆﾇﾈﾊﾋﾎﾏﾐﾑﾒﾓﾔﾕﾗﾘﾜ日(+*;)-|2589Z';
 
-    const create = (x) => {
+    const create = (x): void => {
         let column: IColumn[] = [createItem(x)];
 
         setTimeout(() => setInterval(() => {
@@ -76,7 +76,7 @@ function graphics() {
         create(x);
     }
 
-    const update = (column: IColumn[]) => {
+    const update = (column: IColumn[]): boolean => {
         let needsNew: boolean = false;
 
         for (let i: number = 0; i < column.length; i++) {
@@ -133,6 +133,6 @@ function graphics() {
             delay  : Math.floor(Math.random() * 8000) + 2000
         };
     };
-}
+};
 
-setTimeout(() => graphics(), 100);
+setTimeout(graphics, 100);
