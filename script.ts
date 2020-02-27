@@ -52,7 +52,7 @@ const graphics = (): void => {
 
     const chars: String = 'ｦｱｳｴｵｶｷｹｺｻｼｽｾｿﾀﾂﾃﾅﾆﾇﾈﾊﾋﾎﾏﾐﾑﾒﾓﾔﾕﾗﾘﾜ日(+*;)-|2589Z';
 
-    interface IColumn {
+    interface IColumnItem {
         x       : number,
         letters : number,
         max     : number,
@@ -62,7 +62,7 @@ const graphics = (): void => {
         delay   : number
     }
 
-    const createItem = (x: number): IColumn => {
+    const createItem = (x: number): IColumnItem => {
         return {
             x      : x,
             letters: 0,
@@ -75,7 +75,7 @@ const graphics = (): void => {
     };
 
     const create = (x): void => {
-        let column: IColumn[] = [createItem(x)];
+        let column: IColumnItem[] = [createItem(x)];
 
         setTimeout(() => setInterval(() => {
             if(update(column)) {
@@ -92,18 +92,15 @@ const graphics = (): void => {
 
     for (let x: number = 1; x < window.innerWidth; x += 12) {
         if (x + 12 > window.innerWidth) break;
-
         for (let y: number = 0; y < window.innerHeight; y += 12) paintDot(x, y);
 
         create(x);
     }
 
-    const update = (column: IColumn[]): boolean => {
-        let needsNew: boolean = false;
+    const update = (column: IColumnItem[]): boolean => {
+        let nextItem: boolean = false;
 
-        for (let i: number = 0; i < column.length; i++) {
-            let item: IColumn = column[i];
-
+        column.forEach(item => {
             if (item.delay <= 0) {
                 paintRect(item.x, item.letterY, 12, 12);
 
@@ -115,7 +112,7 @@ const graphics = (): void => {
                 if (item.letters >= item.max && !item.erasing) {
                     item.erasing = true;
 
-                    needsNew = true;
+                    nextItem = true;
                 } else {
                     item.letters += 1;
                 }
@@ -129,9 +126,9 @@ const graphics = (): void => {
             } else {
                 item.delay -= interval;
             }
-        }
+        });
 
-        return needsNew;
+        return nextItem;
     };
 };
 
