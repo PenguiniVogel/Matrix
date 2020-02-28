@@ -24,65 +24,22 @@
 
 ///<reference path="Utility.ts"/>
 import Color = Utility.Color;
-import Cookie = Utility.Cookie;
 
-const options = {
-    textColor : new Color(68, 255, 0),
+var options = {
+    textColor: new Color(68, 255, 0),
     gradient: false
 };
 
-(function () {
-    let textColorCookie: Cookie = Cookie.getCookie('text_color');
+// @ts-ignore
+window.wallpaperPropertyListener = {
+    applyUserProperties: function (props) {
+        if (props.schemecolor) {
+            let color = props.schemecolor.value.split(' ').map((segment) => Math.min(255, Math.ceil(parseFloat(segment) * 255)));
 
-    if (textColorCookie) options.textColor.fromHex(textColorCookie.getValue());
-    else {
-        textColorCookie = new Cookie('text_color', '#44ff00');
-
-        textColorCookie.add();
-    }
-
-    let gradientCookie: Cookie = Cookie.getCookie('gradient');
-
-    if (gradientCookie) options.gradient = gradientCookie.getValue() === 'true';
-    else {
-        gradientCookie = new Cookie('gradient', 'off');
-
-        gradientCookie.add();
-    }
-
-    let colorInput = <HTMLInputElement>document.querySelector('#options input[type="color"]');
-
-    colorInput.value = options.textColor.toHex();
-
-    colorInput.addEventListener('input', (e: InputEvent) => {
-        let hex = (<HTMLInputElement>e.target).value;
-
-        new Cookie('text_color', hex).add();
-
-        options.textColor.fromHex(hex);
-    });
-
-    let gradientCheck = <HTMLInputElement>document.querySelector('#options input[type="checkbox"]');
-
-    gradientCheck.checked = options.gradient;
-
-    gradientCheck.addEventListener('input', (e: InputEvent) => {
-        let val = (<HTMLInputElement>e.target).checked;
-
-        new Cookie('gradient', `${val}`).add();
-
-        options.gradient = val;
-    });
-
-    window.addEventListener('keyup', (e) => {
-        if (e.key && e.key.toLowerCase() === 'o') {
-            let options = <HTMLElement>document.querySelector('#options');
-
-            if (options.style['display'] === '') options.style['display'] = 'none';
-            else options.style['display'] = '';
+            options.textColor = new Color(color[0], color[1], color[2]);
         }
-    });
-})();
+    }
+};
 
 const graphics = (): void => {
     const interval: number = 250;
