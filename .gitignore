@@ -1,2 +1,6 @@
 # Ignore compiled script
-script.js
+*.js
+*.js.map
+
+# Don't ignore distribute min.js (GitHub Pages)
+!min.js

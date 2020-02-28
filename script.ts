@@ -22,6 +22,69 @@
  SOFTWARE.
  */
 
+///<reference path="Utility.ts"/>
+import Color = Utility.Color;
+import Cookie = Utility.Cookie;
+
+const options = {
+    textColor : new Color(68, 255, 0),
+    gradient: false
+};
+
+(function () {
+    let textColorCookie: Cookie = Cookie.getCookie('text_color');
+
+    if (textColorCookie) options.textColor.fromHex(textColorCookie.getValue());
+    else {
+        textColorCookie = new Cookie('text_color', '#44ff00');
+
+        textColorCookie.add();
+    }
+
+    let gradientCookie: Cookie = Cookie.getCookie('gradient');
+
+    if (gradientCookie) options.gradient = gradientCookie.getValue() === 'true';
+    else {
+        gradientCookie = new Cookie('gradient', 'off');
+
+        gradientCookie.add();
+    }
+
+    let colorInput = <HTMLInputElement>document.querySelector('#options input[type="color"]');
+
+    colorInput.value = options.textColor.toHex();
+
+    colorInput.addEventListener('input', (e: InputEvent) => {
+        let hex = (<HTMLInputElement>e.target).value;
+
+        new Cookie('text_color', hex).add();
+
+        options.textColor.fromHex(hex);
+    });
+
+    let gradientCheck = <HTMLInputElement>document.querySelector('#options input[type="checkbox"]');
+
+    gradientCheck.checked = options.gradient;
+
+    gradientCheck.addEventListener('input', (e: InputEvent) => {
+        console.log(e);
+        let val = (<HTMLInputElement>e.target).checked;
+
+        new Cookie('gradient', `${val}`).add();
+
+        options.gradient = val;
+    });
+
+    window.addEventListener('keyup', (e) => {
+        if (e.key && e.key.toLowerCase() === 'o') {
+            let options = <HTMLElement>document.querySelector('#options');
+
+            if (options.style['display'] === '') options.style['display'] = 'none';
+            else options.style['display'] = '';
+        }
+    });
+})();
+
 const graphics = (): void => {
     const interval: number = 250;
 
@@ -38,22 +101,39 @@ const graphics = (): void => {
 
     graphics.scale(1.2, 1.2);
 
-    const paintRect = (x: number, y: number, width: number, height: number): void => {
-        graphics.fillStyle = '#000000';
+    const paintRect = (x: number, y: number, width: number, height: number, color: string = '#000000'): void => {
+        graphics.fillStyle = color;
         graphics.fillRect(x, y, width, height);
     };
 
-    const paintDot = (x: number, y: number): void => {
-        graphics.fillStyle = '#44ff00';
-        graphics.globalAlpha = Math.max(0.05, Math.min(0.5, Math.random()));
-        graphics.fillRect(x + 2, y + 4, 2, 2);
-        graphics.globalAlpha = 1;
+    const paintDot = (x: number, y: number, column?: IColumn): void => {
+        let alpha = Math.max(0.05, Math.min(0.5, Math.random()));
+
+        if (options.gradient && column) graphics.fillStyle = `hsla(${column.hsv}, 100%, 50%, ${alpha})`;
+        else graphics.fillStyle = options.textColor.toRGBA(alpha);
+
+        graphics.fillRect(x + 5, y + 4, 2, 2);
     };
 
-    const chars: String = 'ｦｱｳｴｵｶｷｹｺｻｼｽｾｿﾀﾂﾃﾅﾆﾇﾈﾊﾋﾎﾏﾐﾑﾒﾓﾔﾕﾗﾘﾜ日(+*;)-|2589Z';
+    interface IChar {
+        offsetX : number,
+        char    : string
+    }
+
+    const chars: IChar[] = [];
+
+    let convertToIChar = (line: string) => {
+        for (let i = 0; i < line.length; i++) {
+            chars.push({
+                offsetX : Math.floor(6 - (graphics.measureText(line[i]).width / 2)),
+                char    : line[i]
+            });
+        }
+    };
+
+    convertToIChar('ｦｱｳｴｵｶｷｹｺｻｼｽｾｿﾀﾂﾃﾅﾆﾇﾈﾊﾋﾎﾏﾐﾑﾒﾓﾔﾕﾗﾘﾜ日(+*;)-|2589Z');
 
     interface IColumnItem {
-        x       : number,
         letters : number,
         max     : number,
         letterY : number,
@@ -62,11 +142,16 @@ const graphics = (): void => {
         delay   : number
     }
 
-    const createItem = (x: number): IColumnItem => {
+    interface IColumn {
+        x     : number,
+        hsv   : number,
+        items : IColumnItem[]
+    }
+
+    const createItem = (): IColumnItem => {
         return {
-            x      : x,
             letters: 0,
-            max    : Math.floor(Math.random() * 8) + 2,
+            max    : Math.floor(Math.random() * 8) + 6,
             letterY: 10,
             erasing: false,
             eraseY : 0,
@@ -75,18 +160,20 @@ const graphics = (): void => {
     };
 
     const create = (x): void => {
-        let column: IColumnItem[] = [createItem(x)];
+        let column: IColumn = {
+            x     : x,
+            hsv   : 0,
+            items : [createItem()]
+        };
 
         setTimeout(() => setInterval(() => {
-            if(update(column)) {
-                column.push(createItem(x));
+            update(column);
+
+            if (options.gradient) {
+                column.hsv += 1;
+
+                if (column.hsv >= 360) column.hsv = 0;
             }
-
-            graphics.globalAlpha = 0.005;
-            paintRect(0, 0, window.innerWidth, window.innerHeight);
-            graphics.globalAlpha = 1;
-
-            column = column.filter(item => item.eraseY <= window.innerHeight);
         }, interval), Math.floor(Math.random() * 2000) + 1000);
     };
 
@@ -97,15 +184,19 @@ const graphics = (): void => {
         create(x);
     }
 
-    const update = (column: IColumnItem[]): boolean => {
+    const update = (column: IColumn): void => {
         let nextItem: boolean = false;
 
-        column.forEach(item => {
+        column.items.forEach(item => {
             if (item.delay <= 0) {
-                paintRect(item.x, item.letterY, 12, 12);
+                paintRect(column.x, item.letterY, 12, 12);
 
-                graphics.strokeStyle = '#44ff00';
-                graphics.strokeText(chars[Math.floor(Math.random() * chars.length)], item.x + 1, item.letterY);
+                if (options.gradient) graphics.strokeStyle = `hsl(${column.hsv}, 100%, 50%)`;
+                else graphics.strokeStyle = options.textColor.toRGB();
+
+                let char: IChar = chars[Math.floor(Math.random() * chars.length)];
+
+                graphics.strokeText(char.char, column.x + char.offsetX, item.letterY);
 
                 item.letterY += 12;
 
@@ -118,8 +209,8 @@ const graphics = (): void => {
                 }
 
                 if (item.erasing) {
-                    paintRect(item.x, item.eraseY, 12, 12);
-                    paintDot(item.x, item.eraseY);
+                    paintRect(column.x, item.eraseY, 12, 12);
+                    paintDot(column.x, item.eraseY, column);
 
                     item.eraseY += 12;
                 }
@@ -128,7 +219,11 @@ const graphics = (): void => {
             }
         });
 
-        return nextItem;
+        if (nextItem) column.items.push(createItem());
+
+        column.items = column.items.filter(item => item.eraseY < window.innerHeight);
+
+        paintRect(column.x, 0, 12, window.innerHeight, 'rgba(0, 0, 0, 0.1)');
     };
 };
 
