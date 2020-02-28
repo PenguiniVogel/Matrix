@@ -67,7 +67,6 @@ const options = {
     gradientCheck.checked = options.gradient;
 
     gradientCheck.addEventListener('input', (e: InputEvent) => {
-        console.log(e);
         let val = (<HTMLInputElement>e.target).checked;
 
         new Cookie('gradient', `${val}`).add();
