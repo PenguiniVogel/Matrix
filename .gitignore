@@ -1,3 +1,6 @@
+# Ignore directories
+.*/
+
 # Ignore compiled script
 *.js
 *.js.map
