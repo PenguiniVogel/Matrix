@@ -70,27 +70,31 @@ window.wallpaperPropertyListener = {
         }
 
         if (properties.gradienttype) {
-            switch (properties.gradienttype.value) {
-                case GradientType.NONE: {
-                    options.gradientType = GradientType.NONE;
-                    columns.forEach(column => column.hsv = 0);
-                    break;
-                }
-                case GradientType.ALL: {
-                    options.gradientType = GradientType.ALL;
-                    columns.forEach(column => column.hsv = 0);
-                    break;
-                }
-                case GradientType.PER: {
-                    options.gradientType = GradientType.PER;
-                    columns.forEach(column => column.hsv = 360 * (column.x / window.innerWidth));
-                    break;
-                }
-            }
+            options.gradientType = properties.gradienttype.value;
         }
 
         if (properties.linelength) {
             options.lineLength = properties.linelength.value;
+            setGradient();
+        }
+    }
+};
+
+// Gradient Settings
+
+const setGradient = (): void => {
+    switch (options.gradientType) {
+        case GradientType.NONE: {
+            columns.forEach(column => column.hsv = 0);
+            break;
+        }
+        case GradientType.ALL: {
+            columns.forEach(column => column.hsv = 0);
+            break;
+        }
+        case GradientType.PER: {
+            columns.forEach(column => column.hsv = 360 * (column.x / window.innerWidth));
+            break;
         }
     }
 };
@@ -226,4 +230,7 @@ const graphics = (): void => {
     };
 };
 
-setTimeout(graphics, 100);
+setTimeout(() => {
+    graphics();
+    setGradient();
+}, 100);
