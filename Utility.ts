@@ -113,6 +113,20 @@ module Utility {
             return new Cookie(split[0], split[1]);
         }
 
+        public static getCookieOrSet(name: string, defaultValue: string): Cookie {
+            let cookie = Cookie.getCookie(name);
+
+            if (!cookie) {
+                cookie = new Cookie(name, defaultValue);
+
+                cookie.add();
+            }
+
+            return cookie;
+        }
+
+        // Class
+
         private readonly name: string;
 
         private value: string;

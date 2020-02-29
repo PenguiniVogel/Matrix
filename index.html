@@ -37,11 +37,20 @@ SOFTWARE.
         <div id="options" style="display: none">
             <div>
                 <span>Color: </span>
-                <input type="color"/>
+                <input id="text-color" type="color"/>
             </div>
             <div>
                 <span>Gradient: </span>
-                <input type="checkbox"/>
+                <select id="gradient-type">
+                    <option value="0" selected>None</option>
+                    <option value="1">All</option>
+                    <option value="2">Per</option>
+                </select>
+            </div>
+            <div>
+                <span>Max line length: </span>
+                <input id="line-length" type="range"/>
+                <span id="range-value"></span>
             </div>
         </div>
         <canvas id="matrix-canvas"></canvas>
