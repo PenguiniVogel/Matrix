@@ -25,21 +25,77 @@
 ///<reference path="Utility.ts"/>
 import Color = Utility.Color;
 
-var options = {
+const enum GradientType {
+    NONE,
+    ALL,
+    PER
+}
+
+interface Options {
+    textColor: Color,
+    gradientType: GradientType,
+    lineLength: number
+}
+
+interface IColumnItem {
+    letters: number,
+    max: number,
+    letterY: number,
+    erasing: boolean,
+    eraseY: number,
+    delay: number
+}
+
+interface IColumn {
+    x: number,
+    hsv: number,
+    items: IColumnItem[]
+}
+
+const options: Options = {
     textColor: new Color(68, 255, 0),
-    gradient: false
+    gradientType: GradientType.NONE,
+    lineLength: 6
 };
+
+const columns: IColumn[] = [];
 
 // @ts-ignore
 window.wallpaperPropertyListener = {
-    applyUserProperties: function (props) {
-        if (props.schemecolor) {
-            let color = props.schemecolor.value.split(' ').map((segment) => Math.min(255, Math.ceil(parseFloat(segment) * 255)));
+    applyUserProperties: (properties) => {
+        if (properties.schemecolor) {
+            let color = properties.schemecolor.value.split(' ').map(segment => Math.min(255, Math.ceil(parseFloat(segment) * 255)));
 
-            options.textColor = new Color(color[0], color[1], color[2]);
+            options.textColor.fromRGB(color[0], color[1], color[2]);
+        }
+
+        if (properties.gradienttype) {
+            switch (properties.gradienttype.value) {
+                case GradientType.NONE: {
+                    options.gradientType = GradientType.NONE;
+                    columns.forEach(column => column.hsv = 0);
+                    break;
+                }
+                case GradientType.ALL: {
+                    options.gradientType = GradientType.ALL;
+                    columns.forEach(column => column.hsv = 0);
+                    break;
+                }
+                case GradientType.PER: {
+                    options.gradientType = GradientType.PER;
+                    columns.forEach(column => column.hsv = 360 * (column.x / window.innerWidth));
+                    break;
+                }
+            }
+        }
+
+        if (properties.linelength) {
+            options.lineLength = properties.linelength.value;
         }
     }
 };
+
+// Graphics
 
 const graphics = (): void => {
     const interval: number = 250;
@@ -65,15 +121,15 @@ const graphics = (): void => {
     const paintDot = (x: number, y: number, column?: IColumn): void => {
         let alpha = Math.max(0.05, Math.min(0.5, Math.random()));
 
-        if (options.gradient && column) graphics.fillStyle = `hsla(${column.hsv}, 100%, 50%, ${alpha})`;
+        if (options.gradientType !== GradientType.NONE && column) graphics.fillStyle = `hsla(${column.hsv}, 100%, 50%, ${alpha})`;
         else graphics.fillStyle = options.textColor.toRGBA(alpha);
 
         graphics.fillRect(x + 5, y + 4, 2, 2);
     };
 
     interface IChar {
-        offsetX : number,
-        char    : string
+        offsetX: number,
+        char: string
     }
 
     const chars: IChar[] = [];
@@ -81,51 +137,38 @@ const graphics = (): void => {
     let convertToIChar = (line: string) => {
         for (let i = 0; i < line.length; i++) {
             chars.push({
-                offsetX : Math.floor(6 - (graphics.measureText(line[i]).width / 2)),
-                char    : line[i]
+                offsetX: Math.floor(6 - (graphics.measureText(line[i]).width / 2)),
+                char: line[i]
             });
         }
     };
 
     convertToIChar('ｦｱｳｴｵｶｷｹｺｻｼｽｾｿﾀﾂﾃﾅﾆﾇﾈﾊﾋﾎﾏﾐﾑﾒﾓﾔﾕﾗﾘﾜ日(+*;)-|2589Z');
 
-    interface IColumnItem {
-        letters : number,
-        max     : number,
-        letterY : number,
-        erasing : boolean,
-        eraseY  : number,
-        delay   : number
-    }
-
-    interface IColumn {
-        x     : number,
-        hsv   : number,
-        items : IColumnItem[]
-    }
-
     const createItem = (): IColumnItem => {
         return {
             letters: 0,
-            max    : Math.floor(Math.random() * 8) + 6,
+            max: Math.floor(Math.random() * (options.lineLength / 2)) + (options.lineLength / 2),
             letterY: 10,
             erasing: false,
-            eraseY : 0,
-            delay  : Math.floor(Math.random() * 8000) + 2000
+            eraseY: 0,
+            delay: Math.floor(Math.random() * 8000) + 2000
         };
     };
 
     const create = (x): void => {
         let column: IColumn = {
-            x     : x,
-            hsv   : 0,
-            items : [createItem()]
+            x: x,
+            hsv: 0,
+            items: [createItem()]
         };
+
+        columns.push(column);
 
         setTimeout(() => setInterval(() => {
             update(column);
 
-            if (options.gradient) {
+            if (options.gradientType !== GradientType.NONE) {
                 column.hsv += 1;
 
                 if (column.hsv >= 360) column.hsv = 0;
@@ -147,7 +190,7 @@ const graphics = (): void => {
             if (item.delay <= 0) {
                 paintRect(column.x, item.letterY, 12, 12);
 
-                if (options.gradient) graphics.strokeStyle = `hsl(${column.hsv}, 100%, 50%)`;
+                if (options.gradientType !== GradientType.NONE) graphics.strokeStyle = `hsl(${column.hsv}, 100%, 50%)`;
                 else graphics.strokeStyle = options.textColor.toRGB();
 
                 let char: IChar = chars[Math.floor(Math.random() * chars.length)];

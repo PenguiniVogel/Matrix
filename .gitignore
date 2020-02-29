@@ -1,5 +1,5 @@
 # Ignore directories
-.idea
+.*/
 
 # Ignore compiled script
 *.js

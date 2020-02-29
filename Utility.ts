@@ -32,10 +32,10 @@ module Utility {
         private a: number;
 
         constructor(r: number, g: number, b: number, a: number = 255) {
-            this.r = Math.max(0, Math.min(255, r));
-            this.g = Math.max(0, Math.min(255, g));
-            this.b = Math.max(0, Math.min(255, b));
-            this.a = Math.max(0, Math.min(255, a));
+            this.r = r;
+            this.g = g;
+            this.b = b;
+            this.a = a;
         }
 
         public fromRGBA(r: number, g: number, b: number, a: number): Color {
@@ -112,6 +112,20 @@ module Utility {
 
             return new Cookie(split[0], split[1]);
         }
+
+        public static getCookieOrSet(name: string, defaultValue: string): Cookie {
+            let cookie = Cookie.getCookie(name);
+
+            if (!cookie) {
+                cookie = new Cookie(name, defaultValue);
+
+                cookie.add();
+            }
+
+            return cookie;
+        }
+
+        // Class
 
         private readonly name: string;
 
