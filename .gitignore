@@ -1,9 +1,9 @@
-# Ignore directories
-.*/
+# Ignore IDE specific files
+.idea
 
 # Ignore compiled script
 *.js
 *.js.map
 
 # Don't ignore distribute min.js (GitHub Pages)
-!min.js
+!build/min.js
