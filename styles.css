@@ -2,25 +2,7 @@ body {
 	background-color: #000000;
 }
 
-#options {
-	cursor: auto;
-	z-index: 2;
-	position: absolute;
-	padding: 1px;
-	background-color: #ffffff;
-	display: grid;
-	grid-template-columns: auto;
-	grid-auto-rows: auto;
-}
-
-#options span {
-	line-height: 26px;
-	padding-right: 3px;
-	padding-left: 3px;
-}
-
 #matrix-canvas {
-	cursor: none;
 	z-index: 1;
 	position: absolute;
 	top: 0;

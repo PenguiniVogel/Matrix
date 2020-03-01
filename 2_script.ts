@@ -28,7 +28,8 @@ import Color = Utility.Color;
 const enum GradientType {
     NONE,
     ALL,
-    PER
+    PER,
+    AUDIO
 }
 
 interface Options {
@@ -80,6 +81,42 @@ window.wallpaperPropertyListener = {
     }
 };
 
+window.onload = () => {
+    // @ts-ignore
+    window.wallpaperRegisterAudioListener((audioFrame: number[]) => {
+        if (options.gradientType !== GradientType.AUDIO) return;
+
+        let half = Math.floor(columns.length / 2);
+        let colPerFrame = Math.floor(columns.length / 128);
+
+        let iteration = 0;
+        let at = 63;
+
+        for (let l = half; l > -1; l --) {
+            columns[l].hsv = 120 * (1.0 - audioFrame[at]);
+
+            iteration += 1;
+
+            if (iteration >= colPerFrame) {
+                iteration = 0;
+                at -= 1;
+            }
+        }
+
+        at = 64;
+        for (let r = half + 1; r < columns.length; r ++) {
+            columns[r].hsv = 120 * (1.0 - audioFrame[at]);
+
+            iteration += 1;
+
+            if (iteration >= colPerFrame) {
+                iteration = 0;
+                at += 1;
+            }
+        }
+    });
+};
+
 // Gradient Settings
 
 const setGradient = (): void => {
@@ -94,6 +131,10 @@ const setGradient = (): void => {
         }
         case GradientType.PER: {
             columns.forEach(column => column.hsv = 360 * (column.x / window.innerWidth));
+            break;
+        }
+        case GradientType.AUDIO: {
+            columns.forEach(column => column.hsv = 60);
             break;
         }
     }
@@ -172,7 +213,7 @@ const graphics = (): void => {
         setTimeout(() => setInterval(() => {
             update(column);
 
-            if (options.gradientType !== GradientType.NONE) {
+            if (options.gradientType !== GradientType.NONE && options.gradientType !== GradientType.AUDIO) {
                 column.hsv += 1;
 
                 if (column.hsv >= 360) column.hsv = 0;
