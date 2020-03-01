@@ -2,8 +2,6 @@
   "compilerOptions": {
     "target": "ES3",
     "lib": ["dom", "es2017"],
-    "rootDir": "./",
-    "outFile": "./script.js",
-    "removeComments": true
+    "rootDir": "./"
   }
 }
