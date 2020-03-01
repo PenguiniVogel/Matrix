@@ -173,4 +173,10 @@ module Utility {
 
     }
 
+    export function forEach<T>(array: T[], callback: (item: T, index?: number) => void): void {
+        for (let i = 0, l = array.length; i < l; i ++) {
+            callback(array[i], i);
+        }
+    }
+
 }
