@@ -22,7 +22,7 @@
  SOFTWARE.
  */
 
-///<reference path="Utility.ts"/>
+///<reference path="1_Utility.ts"/>
 import Color = Utility.Color;
 
 const enum GradientType {
