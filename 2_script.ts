@@ -28,10 +28,19 @@ import Cookie = Utility.Cookie;
 import forEach = Utility.forEach;
 
 (function () {
-    enum GradientType {
+    const enum GradientType {
         NONE,
         ALL,
         PER
+    }
+
+    const enum Values {
+        INTERVAL = 250,
+        DEFAULT_TEXT_COLOR = '#44ff00',
+        COOKIE_TEXT_COLOR = 'text_color',
+        COOKIE_GRADIENT_TYPE = 'gradient_type',
+        COOKIE_LINE_LENGTH = 'line_length',
+        MAX_LINE_LENGTH = 14
     }
 
     interface Options {
@@ -63,15 +72,6 @@ import forEach = Utility.forEach;
     }
 
     const columns: IColumn[] = [];
-
-    const enum Values {
-        INTERVAL = 250,
-        DEFAULT_TEXT_COLOR = '#44ff00',
-        COOKIE_TEXT_COLOR = 'text_color',
-        COOKIE_GRADIENT_TYPE = 'gradient_type',
-        COOKIE_LINE_LENGTH = 'line_length',
-        MAX_LINE_LENGTH = 14
-    }
 
     // Text Color
 
