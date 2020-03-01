@@ -71,11 +71,11 @@ window.wallpaperPropertyListener = {
 
         if (properties.gradienttype) {
             options.gradientType = properties.gradienttype.value;
+            setGradient();
         }
 
         if (properties.linelength) {
             options.lineLength = properties.linelength.value;
-            setGradient();
         }
     }
 };
