@@ -37,16 +37,18 @@ import forEach = Utility.forEach;
     const enum Values {
         INTERVAL = 250,
         DEFAULT_TEXT_COLOR = '#44ff00',
+        DEFAULT_SYMBOLS = 'ｦｱｳｴｵｶｷｹｺｻｼｽｾｿﾀﾂﾃﾅﾆﾇﾈﾊﾋﾎﾏﾐﾑﾒﾓﾔﾕﾗﾘﾜ日(+*;)-|2589Z',
         COOKIE_TEXT_COLOR = 'text_color',
         COOKIE_GRADIENT_TYPE = 'gradient_type',
         COOKIE_LINE_LENGTH = 'line_length',
+        COOKIE_SYMBOLS = 'symbols',
         MAX_LINE_LENGTH = 14
     }
 
     interface Options {
         textColor: Color,
         gradientType: GradientType,
-        lineLength: number
+        lineLength: number,
     }
 
     const options: Options = {
@@ -71,7 +73,30 @@ import forEach = Utility.forEach;
         items    : IColumnItem[]
     }
 
+    interface IChar {
+        offsetX : number,
+        char    : string
+    }
+
     const columns: IColumn[] = [];
+    const canvas: HTMLCanvasElement = <HTMLCanvasElement>document.getElementById('matrix-canvas');
+    const graphics: CanvasRenderingContext2D = canvas.getContext('2d');
+
+    // States
+    let isTyping: boolean = false;
+
+    // Chars
+    let chars: IChar[] = [];
+
+    const convertToIChar = (line: string) => {
+        chars = [];
+        for (let i = 0, l = line.length; i < l; i++) {
+            chars.push({
+                offsetX : Math.floor(6 - (graphics.measureText(line[i]).width / 2)),
+                char    : line[i]
+            });
+        }
+    };
 
     // Text Color
 
@@ -81,7 +106,7 @@ import forEach = Utility.forEach;
 
     textColorInput.value = options.textColor.toHex();
 
-    textColorInput.addEventListener('input', (e: InputEvent) => {
+    textColorInput.addEventListener('input', (e) => {
         let hex = (<HTMLInputElement>e.target).value;
 
         new Cookie(Values.COOKIE_TEXT_COLOR, hex).add();
@@ -118,7 +143,7 @@ import forEach = Utility.forEach;
         new Cookie(Values.COOKIE_GRADIENT_TYPE, `${inputValue}`).add();
     };
 
-    gradientTypeInput.addEventListener('input', (e: InputEvent) => gradientTypeEvent(parseInt((<HTMLInputElement>e.target).value)));
+    gradientTypeInput.addEventListener('input', (e) => gradientTypeEvent(parseInt((<HTMLInputElement>e.target).value)));
 
     // Line Length
 
@@ -138,10 +163,29 @@ import forEach = Utility.forEach;
 
     lineLengthInput.addEventListener('input', (e) => lineLengthEvent(parseInt((<HTMLInputElement>e.target).value)));
 
+    // Symbols
+
+    let symbolInput = <HTMLInputElement>document.querySelector('#symbols');
+
+    symbolInput.value = Cookie.getCookieOrSet(Values.COOKIE_SYMBOLS, Values.DEFAULT_SYMBOLS).getValue();
+
+    convertToIChar(symbolInput.value);
+    symbolInput.addEventListener('input', (e) => {
+        let element = <HTMLInputElement>e.target;
+
+        if (element.value === '') convertToIChar(Values.DEFAULT_SYMBOLS);
+        else convertToIChar(element.value);
+
+        new Cookie(Values.COOKIE_SYMBOLS, `${element.value}`).add();
+    });
+
+    symbolInput.addEventListener('focus', (e) => isTyping = true);
+    symbolInput.addEventListener('blur', (e) => isTyping = false);
+
     // Option Panel
 
     window.addEventListener('keyup', (e) => {
-        if (e.key && e.key.toLowerCase() === 'o') {
+        if (e.key && e.key.toLowerCase() === 'o' && !isTyping) {
             let options = <HTMLElement>document.querySelector('#options');
 
             if (options.style['display'] === '') options.style['display'] = 'none';
@@ -151,9 +195,7 @@ import forEach = Utility.forEach;
 
     // Graphics
 
-    const graphics = (): void => {
-        const canvas: HTMLCanvasElement = <HTMLCanvasElement>document.getElementById('matrix-canvas');
-        const graphics: CanvasRenderingContext2D = canvas.getContext('2d');
+    const init = (): void => {
 
         const resize = (e: Event): void => {
             canvas.width = window.innerWidth;
@@ -178,24 +220,6 @@ import forEach = Utility.forEach;
 
             graphics.fillRect(x + 5, y + 4, 2, 2);
         };
-
-        interface IChar {
-            offsetX : number,
-            char    : string
-        }
-
-        const chars: IChar[] = [];
-
-        let convertToIChar = (line: string) => {
-            for (let i = 0, l = line.length; i < l; i++) {
-                chars.push({
-                    offsetX : Math.floor(6 - (graphics.measureText(line[i]).width / 2)),
-                    char    : line[i]
-                });
-            }
-        };
-
-        convertToIChar('ｦｱｳｴｵｶｷｹｺｻｼｽｾｿﾀﾂﾃﾅﾆﾇﾈﾊﾋﾎﾏﾐﾑﾒﾓﾔﾕﾗﾘﾜ日(+*;)-|2589Z');
 
         const createItem = (): IColumnItem => {
             return {
@@ -297,7 +321,7 @@ import forEach = Utility.forEach;
 
     lineLengthEvent(parseInt(lineLengthInput.value));
 
-    graphics();
+    init();
 
     gradientTypeEvent(options.gradientType);
 })();

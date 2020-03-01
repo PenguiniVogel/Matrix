@@ -9,14 +9,19 @@ body {
 	padding: 1px;
 	background-color: #ffffff;
 	display: grid;
-	grid-template-columns: auto;
-	grid-auto-rows: auto;
+	grid-template-rows: auto;
+}
+
+#options div {
+	display: grid;
+	grid-template-columns: auto auto;
 }
 
 #options span {
 	line-height: 26px;
-	padding-right: 3px;
 	padding-left: 3px;
+	max-width: 150px;
+	min-width: 150px;
 }
 
 #matrix-canvas {
