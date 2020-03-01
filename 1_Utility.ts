@@ -97,80 +97,10 @@ module Utility {
 
     }
 
-    export class Cookie {
-
-        public static getCookie(name: string): Cookie {
-            let index = document.cookie.indexOf(`${name}=`);
-
-            if (index === -1) return null;
-
-            let s = document.cookie.substr(index);
-
-            if (s.indexOf('; ') !== -1) s = s.substring(0, s.indexOf('; '));
-
-            let split = s.split('=');
-
-            return new Cookie(split[0], split[1]);
+    export function forEach<T>(array: T[], callback: (item: T, index?: number) => void): void {
+        for (let i = 0, l = array.length; i < l; i ++) {
+            callback(array[i], i);
         }
-
-        public static getCookieOrSet(name: string, defaultValue: string): Cookie {
-            let cookie = Cookie.getCookie(name);
-
-            if (!cookie) {
-                cookie = new Cookie(name, defaultValue);
-
-                cookie.add();
-            }
-
-            return cookie;
-        }
-
-        // Class
-
-        private readonly name: string;
-
-        private value: string;
-        private expires: Date;
-
-        constructor(name: string, value: string) {
-            this.name = name;
-            this.value = value;
-            this.expires = new Date();
-
-            // Cookie by default 7 days valid
-            this.expires.setTime(this.expires.getTime() + (7 * 24 * 60 * 60 * 1000));
-        }
-
-        public setExpirationDate(date: Date): Cookie {
-            this.expires = date;
-            return this;
-        }
-
-        public getName(): string {
-            return this.name;
-        }
-
-        public getValue(): string {
-            return this.value;
-        }
-
-        public setValue(value: string): Cookie {
-            this.value = value;
-            return this;
-        }
-
-        public add(): void {
-            document.cookie = `${this.name}=${this.value}; expires=${this.expires.toUTCString()}; path=/`;
-        }
-
-        public remove(): void {
-            let date = new Date();
-
-            date.setTime(date.getTime() - (24 * 60 * 60 * 1000));
-
-            document.cookie = `${this.name}=; expires=${date.toUTCString()}; path=/`;
-        }
-
     }
 
 }

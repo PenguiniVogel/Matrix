@@ -24,12 +24,17 @@
 
 ///<reference path="1_Utility.ts"/>
 import Color = Utility.Color;
+import forEach = Utility.forEach;
 
 const enum GradientType {
     NONE,
     ALL,
     PER,
     AUDIO
+}
+
+const enum Values {
+    INTERVAL = 250
 }
 
 interface Options {
@@ -49,6 +54,7 @@ interface IColumnItem {
 
 interface IColumn {
     x: number,
+    interval: number
     hsv: number,
     items: IColumnItem[]
 }
@@ -93,7 +99,7 @@ window.onload = () => {
         let at = 63;
 
         for (let l = half; l > -1; l --) {
-            columns[l].hsv = 120 * (1.0 - audioFrame[at]);
+            columns[l].hsv = 240 * audioFrame[at] + 120;
 
             iteration += 1;
 
@@ -105,7 +111,7 @@ window.onload = () => {
 
         at = 64;
         for (let r = half + 1; r < columns.length; r ++) {
-            columns[r].hsv = 120 * (1.0 - audioFrame[at]);
+            columns[r].hsv = 240 * audioFrame[at] + 120;
 
             iteration += 1;
 
@@ -122,19 +128,19 @@ window.onload = () => {
 const setGradient = (): void => {
     switch (options.gradientType) {
         case GradientType.NONE: {
-            columns.forEach(column => column.hsv = 0);
+            forEach(columns, column => column.hsv = 0);
             break;
         }
         case GradientType.ALL: {
-            columns.forEach(column => column.hsv = 0);
+            forEach(columns, column => column.hsv = 0);
             break;
         }
         case GradientType.PER: {
-            columns.forEach(column => column.hsv = 360 * (column.x / window.innerWidth));
+            forEach(columns, column => column.hsv = 360 * (column.x / window.innerWidth));
             break;
         }
         case GradientType.AUDIO: {
-            columns.forEach(column => column.hsv = 60);
+            forEach(columns, column => column.hsv = 60);
             break;
         }
     }
@@ -180,7 +186,7 @@ const graphics = (): void => {
     const chars: IChar[] = [];
 
     let convertToIChar = (line: string) => {
-        for (let i = 0; i < line.length; i++) {
+        for (let i = 0, l = line.length; i < l; i++) {
             chars.push({
                 offsetX: Math.floor(6 - (graphics.measureText(line[i]).width / 2)),
                 char: line[i]
@@ -204,21 +210,12 @@ const graphics = (): void => {
     const create = (x): void => {
         let column: IColumn = {
             x: x,
+            interval: Math.floor(Values.INTERVAL * Math.random()) + 150,
             hsv: 0,
             items: [createItem()]
         };
 
         columns.push(column);
-
-        setTimeout(() => setInterval(() => {
-            update(column);
-
-            if (options.gradientType !== GradientType.NONE && options.gradientType !== GradientType.AUDIO) {
-                column.hsv += 1;
-
-                if (column.hsv >= 360) column.hsv = 0;
-            }
-        }, interval), Math.floor(Math.random() * 2000) + 1000);
     };
 
     for (let x: number = 1; x < window.innerWidth; x += 12) {
@@ -228,10 +225,16 @@ const graphics = (): void => {
         create(x);
     }
 
-    const update = (column: IColumn): void => {
+    const update = (column: IColumn, delta: number): void => {
         let nextItem: boolean = false;
 
-        column.items.forEach(item => {
+        if (options.gradientType !== GradientType.NONE && options.gradientType !== GradientType.AUDIO) {
+            column.hsv += 1;
+
+            if (column.hsv >= 360) column.hsv = 0;
+        }
+
+        forEach(column.items, item => {
             if (item.delay <= 0) {
                 paintRect(column.x, item.letterY, 12, 12);
 
@@ -269,9 +272,28 @@ const graphics = (): void => {
 
         paintRect(column.x, 0, 12, window.innerHeight, 'rgba(0, 0, 0, 0.1)');
     };
+
+    let lastRender = 0;
+    const loop = (timestamp: number) => {
+        let delta = timestamp - lastRender;
+
+        forEach(columns, column => {
+            column.interval -= delta;
+
+            if (column.interval <= 0) {
+                update(column, delta);
+                column.interval = Math.floor(Values.INTERVAL * Math.random()) + 150;
+            }
+        });
+
+        lastRender = timestamp;
+        window.requestAnimationFrame(loop);
+    };
+
+    lastRender = performance.now();
+    window.requestAnimationFrame(loop);
+
+    setGradient();
 };
 
-setTimeout(() => {
-    graphics();
-    setGradient();
-}, 100);
+graphics();
