@@ -2,6 +2,7 @@
   "compilerOptions": {
     "target": "ES3",
     "lib": ["dom", "es2017"],
-    "rootDir": "./"
+    "rootDir": "./",
+    "removeComments": true
   }
 }
