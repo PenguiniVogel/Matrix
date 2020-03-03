@@ -59,6 +59,11 @@ interface IColumn {
     items: IColumnItem[]
 }
 
+interface IChar {
+    offsetX: number,
+    char: string
+}
+
 const options: Options = {
     textColor: new Color(68, 255, 0),
     gradientType: GradientType.NONE,
@@ -66,6 +71,30 @@ const options: Options = {
 };
 
 const columns: IColumn[] = [];
+
+const canvas: HTMLCanvasElement = <HTMLCanvasElement>document.getElementById('matrix-canvas');
+
+const resize = (e?) => {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+};
+
+resize();
+window.addEventListener('resize', resize);
+
+const graphics: CanvasRenderingContext2D = canvas.getContext('2d');
+
+let chars: IChar[] = [];
+
+const convertToIChar = (line: string) => {
+    chars = [];
+    for (let i = 0, l = line.length; i < l; i++) {
+        chars.push({
+            offsetX: Math.floor(6 - (graphics.measureText(line[i]).width / 2)),
+            char: line[i]
+        });
+    }
+};
 
 // @ts-ignore
 window.wallpaperPropertyListener = {
@@ -82,12 +111,17 @@ window.wallpaperPropertyListener = {
         }
 
         if (properties.linelength) {
-            options.lineLength = properties.linelength.value;
+            options.lineLength = parseInt(properties.linelength.value);
+        }
+
+        if (properties.symbols) {
+            if (properties.symbols.value === '') convertToIChar('ｦｱｳｴｵｶｷｹｺｻｼｽｾｿﾀﾂﾃﾅﾆﾇﾈﾊﾋﾎﾏﾐﾑﾒﾓﾔﾕﾗﾘﾜ日(+*;)-|2589Z');
+            else convertToIChar(properties.symbols.value);
         }
     }
 };
 
-window.onload = () => {
+window.addEventListener('load', (e) => {
     // @ts-ignore
     window.wallpaperRegisterAudioListener((audioFrame: number[]) => {
         if (options.gradientType !== GradientType.AUDIO) return;
@@ -121,7 +155,7 @@ window.onload = () => {
             }
         }
     });
-};
+});
 
 // Gradient Settings
 
@@ -148,19 +182,8 @@ const setGradient = (): void => {
 
 // Graphics
 
-const graphics = (): void => {
+const init = (): void => {
     const interval: number = 250;
-
-    const canvas: HTMLCanvasElement = <HTMLCanvasElement>document.getElementById('matrix-canvas');
-    const graphics: CanvasRenderingContext2D = canvas.getContext('2d');
-
-    const resize = (e: Event): void => {
-        canvas.width = window.innerWidth;
-        canvas.height = window.innerHeight;
-    };
-
-    resize(null);
-    window.addEventListener('resize', resize);
 
     graphics.scale(1.2, 1.2);
 
@@ -177,24 +200,6 @@ const graphics = (): void => {
 
         graphics.fillRect(x + 5, y + 4, 2, 2);
     };
-
-    interface IChar {
-        offsetX: number,
-        char: string
-    }
-
-    const chars: IChar[] = [];
-
-    let convertToIChar = (line: string) => {
-        for (let i = 0, l = line.length; i < l; i++) {
-            chars.push({
-                offsetX: Math.floor(6 - (graphics.measureText(line[i]).width / 2)),
-                char: line[i]
-            });
-        }
-    };
-
-    convertToIChar('ｦｱｳｴｵｶｷｹｺｻｼｽｾｿﾀﾂﾃﾅﾆﾇﾈﾊﾋﾎﾏﾐﾑﾒﾓﾔﾕﾗﾘﾜ日(+*;)-|2589Z');
 
     const createItem = (): IColumnItem => {
         return {
@@ -296,4 +301,4 @@ const graphics = (): void => {
     setGradient();
 };
 
-graphics();
+window.addEventListener('load', e => init());
