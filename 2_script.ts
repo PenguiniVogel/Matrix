@@ -1,25 +1,9 @@
 /**
- MIT License
-
+ https://github.com/FelixVogel/Matrix
  Copyright (c) 2020 Felix Vogel
 
- Permission is hereby granted, free of charge, to any person obtaining a copy
- of this software and associated documentation files (the "Software"), to deal
- in the Software without restriction, including without limitation the rights
- to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- copies of the Software, and to permit persons to whom the Software is
- furnished to do so, subject to the following conditions:
-
- The above copyright notice and this permission notice shall be included in all
- copies or substantial portions of the Software.
-
- THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- SOFTWARE.
+ For the full copyright and license information, please view the LICENSE
+ file that was distributed with this source code.
  */
 
 ///<reference path="1_Utility.ts"/>
@@ -250,14 +234,8 @@ import forEach = Utility.forEach;
             create(x);
         }
 
-        const update = (column: IColumn, delta: number): void => {
+        const update = (column: IColumn): void => {
             let nextItem: boolean = false;
-
-            if (options.gradientType !== GradientType.NONE) {
-                column.hsv += 1;
-
-                if (column.hsv >= 360) column.hsv = 0;
-            }
 
             forEach(column.items, item => {
                 if (item.delay <= 0) {
@@ -303,10 +281,16 @@ import forEach = Utility.forEach;
             let delta = timestamp - lastRender;
 
             forEach(columns, column => {
+                if (options.gradientType !== GradientType.NONE) {
+                    column.hsv += 2.0 * delta;
+
+                    if (column.hsv >= 360.0) column.hsv = 0.0;
+                }
+
                 column.interval -= delta;
 
                 if (column.interval <= 0) {
-                    update(column, delta);
+                    update(column);
                     column.interval = Math.floor(Values.INTERVAL * Math.random()) + 150;
                 }
             });
