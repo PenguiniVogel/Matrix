@@ -83,7 +83,7 @@ module Utility {
 
     export class Cookie {
 
-        public static getCookie(name: string): Cookie {
+        public static get(name: string): Cookie {
             let index = document.cookie.indexOf(`${name}=`);
 
             if (index === -1) return null;
@@ -97,16 +97,20 @@ module Utility {
             return new Cookie(split[0], split[1]);
         }
 
-        public static getCookieOrSet(name: string, defaultValue: string): Cookie {
-            let cookie = Cookie.getCookie(name);
+        public static getOrSet(name: string, defaultValue: string, date?: Date): Cookie {
+            let cookie = Cookie.get(name);
 
             if (!cookie) {
                 cookie = new Cookie(name, defaultValue);
 
-                cookie.add();
+                cookie.setExpirationDate(date).add();
             }
 
             return cookie;
+        }
+
+        public static replace(name: string, value: string, date?: Date): void {
+            new Cookie(name, value).setExpirationDate(date).add();
         }
 
         // Class
@@ -116,7 +120,7 @@ module Utility {
         private value: string;
         private expires: Date;
 
-        constructor(name: string, value: string) {
+        private constructor(name: string, value: string) {
             this.name = name;
             this.value = value;
             this.expires = new Date();
@@ -126,7 +130,8 @@ module Utility {
         }
 
         public setExpirationDate(date: Date): Cookie {
-            this.expires = date;
+            if (date) this.expires = date;
+
             return this;
         }
 
@@ -161,6 +166,10 @@ module Utility {
         for (let i = 0, l = array.length; i < l; i ++) {
             callback(array[i], i);
         }
+    }
+
+    export function capsule(func: () => void): void {
+        func();
     }
 
 }

@@ -20,11 +20,11 @@ file that was distributed with this source code.
     <body>
         <div id="options" style="display: none">
             <div>
-                <span>Color: </span>
-                <input id="text-color" type="color"/>
+                <span>Base color: </span>
+                <input id="base-color" type="color"/>
             </div>
             <div>
-                <span>Gradient: </span>
+                <span>Gradient type: </span>
                 <select id="gradient-type">
                     <option value="0" selected>None</option>
                     <option value="1">All</option>
@@ -32,15 +32,32 @@ file that was distributed with this source code.
                 </select>
             </div>
             <div>
-                <span>Max line length: </span>
+                <span>Gradient Interval: </span>
                 <container>
-                    <input id="line-length" type="range"/>
-                    <span id="range-value"></span>
+                    <input id="gradient-interval" type="range"/>
+                    <span data-value-for="gradient-interval"></span>
                 </container>
             </div>
             <div>
-                <span>Symbols: </span>
+                <span>Max line length: </span>
+                <container>
+                    <input id="line-length" type="range"/>
+                    <span data-value-for="line-length"></span>
+                </container>
+            </div>
+            <div>
+                <span>Symbols:
+                    <span id="symbol-reset" title="Reset Symbols"></span>
+                </span>
                 <input id="symbols"/>
+            </div>
+            <div>
+                <span>Hide cursor: </span>
+                <input id="hide-cursor" type="checkbox" checked/>
+            </div>
+            <div>
+                <span>Reset on focus change: </span>
+                <input id="reset-on-focus" type="checkbox" checked/>
             </div>
         </div>
         <canvas id="matrix-canvas"></canvas>
