@@ -23,9 +23,10 @@ capsule(() => {
         INTERVAL = 250,
         DEFAULT_BASE_COLOR = '#44ff00',
         DEFAULT_SYMBOLS = 'ｦｱｳｴｵｶｷｹｺｻｼｽｾｿﾀﾂﾃﾅﾆﾇﾈﾊﾋﾎﾏﾐﾑﾒﾓﾔﾕﾗﾘﾜ日(+*;)-|2589Z',
-        MAX_LINE_LENGTH = 14,
+        MAX_LINE_LENGTH = 30,
 
         COOKIE_BASE_COLOR = 'base_color',
+        COOKIE_SPEED = 'speed',
         COOKIE_GRADIENT_TYPE = 'gradient_type',
         COOKIE_GRADIENT_INTERVAL = 'gradient_interval',
         COOKIE_LINE_LENGTH = 'line_length',
@@ -57,19 +58,21 @@ capsule(() => {
 
     const OPTIONS: {
         baseColor        : Color,
+        speed            : number,
         gradientType     : GradientType,
         gradientInterval : number,
         lineLength       : number,
         resetOnFocus     : boolean
     } = {
-        baseColor : new Color(68, 255, 0),
+        baseColor: new Color(68, 255, 0),
+        speed: 1,
         gradientType: GradientType.NONE,
-        gradientInterval: 100,
+        gradientInterval: 1,
         lineLength: 14,
         resetOnFocus: true
     };
 
-    const columns: IColumn[] = [];
+    let columns: IColumn[] = [];
     const canvas: HTMLCanvasElement = <HTMLCanvasElement>document.getElementById('matrix-canvas');
     const graphics: CanvasRenderingContext2D = canvas.getContext('2d');
 
@@ -110,6 +113,29 @@ capsule(() => {
 
         setBaseColor(baseColorInput.value);
         baseColorInput.addEventListener('input', (e) => setBaseColor(baseColorInput.value));
+    });
+
+    // Speed
+    capsule(() => {
+        let speedInput = <HTMLInputElement>document.querySelector('#speed');
+        let speedValueView = <HTMLElement>document.querySelector('span[data-value-for="speed"]');
+        let speedCookieValue: number = parseInt(Cookie.getOrSet(Values.COOKIE_SPEED, '0').getValue());
+
+        const setSpeed = (inputValue: number): void => {
+            let adjustedValue = inputValue - (inputValue % 25);
+
+            speedInput.value = `${adjustedValue}`;
+
+            let value = Math.max(1, Math.pow(2, adjustedValue / 25));
+
+            OPTIONS.speed = value;
+            speedValueView.innerHTML = `(x ${value})`;
+
+            Cookie.replace(Values.COOKIE_SPEED, `${adjustedValue}`);
+        };
+
+        setSpeed(speedCookieValue);
+        speedInput.addEventListener('input', (e) => setSpeed(parseInt(speedInput.value)));
     });
 
     // Gradient
@@ -167,16 +193,21 @@ capsule(() => {
     capsule(() => {
         let gradientIntervalInput = <HTMLInputElement>document.querySelector('#gradient-interval');
         let gradientIntervalValueView = <HTMLElement>document.querySelector('span[data-value-for="gradient-interval"]');
-        let gradientIntervalCookieValue = parseInt(Cookie.getOrSet(Values.COOKIE_GRADIENT_INTERVAL, '100').getValue());
+        let gradientIntervalCookieValue = parseInt(Cookie.getOrSet(Values.COOKIE_GRADIENT_INTERVAL, '0').getValue());
 
         gradientIntervalInput.value = `${gradientIntervalCookieValue}`;
 
         const setGradientInterval = (inputValue: number): void => {
-            let value: number = Math.max(1, Math.min(100, inputValue));
-            OPTIONS.gradientInterval = value;
-            gradientIntervalValueView.innerHTML = `(${value})`;
+            let adjustedValue = inputValue - (inputValue % 25);
 
-            Cookie.replace(Values.COOKIE_GRADIENT_INTERVAL, `${value}`);
+            gradientIntervalInput.value = `${adjustedValue}`;
+
+            let value = Math.max(1, Math.pow(2, adjustedValue / 25));
+
+            OPTIONS.gradientInterval = value;
+            gradientIntervalValueView.innerHTML = `(x ${value})`;
+
+            Cookie.replace(Values.COOKIE_GRADIENT_INTERVAL, `${adjustedValue}`);
         };
 
         setGradientInterval(gradientIntervalCookieValue);
@@ -192,7 +223,11 @@ capsule(() => {
         lineLengthInput.value = `${lineLengthCookieValue}`;
 
         const setLineLength = (inputValue: number): void => {
-            let value: number = Math.floor(2 + ((Values.MAX_LINE_LENGTH / 100) * inputValue));
+            let value: number = Math.floor((Values.MAX_LINE_LENGTH / 100) * inputValue);
+
+            lineLengthInput.value = `${Math.ceil((value / Values.MAX_LINE_LENGTH) * 100)}`;
+
+            value += 2;
 
             OPTIONS.lineLength = value;
             lineLengthValueView.innerHTML = `(${value})`;
@@ -233,6 +268,8 @@ capsule(() => {
         let hideCursorInput = <HTMLInputElement>document.querySelector('#hide-cursor');
         let hideCursorCookieValue: boolean = Cookie.getOrSet(Values.COOKIE_HIDE_CURSOR, 'true').getValue() === 'true';
 
+        hideCursorInput.checked = hideCursorCookieValue;
+
         const setHideCursor = (inputValue: boolean) => {
             canvas.style['cursor'] = inputValue ? 'none' : 'default';
 
@@ -247,6 +284,8 @@ capsule(() => {
     capsule(() => {
         let resetOnFocusInput = <HTMLInputElement>document.querySelector('#reset-on-focus');
         let resetOnFocusCookieValue: boolean = Cookie.getOrSet(Values.COOKIE_RESET_ON_FOCUS, 'true').getValue() === 'true';
+
+        resetOnFocusInput.checked = resetOnFocusCookieValue;
 
         const setResetOnFocus = (inputValue: boolean) => {
             OPTIONS.resetOnFocus = inputValue;
@@ -273,15 +312,6 @@ capsule(() => {
     // Graphics
 
     const init = (): void => {
-
-        const resize = (e: Event): void => {
-            canvas.width = window.innerWidth;
-            canvas.height = window.innerHeight;
-        };
-
-        resize(null);
-        window.addEventListener('resize', resize);
-
         graphics.scale(1.2, 1.2);
 
         const paintRect = (x: number, y: number, width: number, height: number, color: string = '#000000'): void => {
@@ -320,12 +350,24 @@ capsule(() => {
             columns.push(column);
         };
 
-        for (let x: number = 1; x < window.innerWidth; x += 12) {
-            if (x + 12 > window.innerWidth) break;
-            for (let y: number = 0; y < window.innerHeight; y += 12) paintDot(x, y);
+        const resize = (e: Event): void => {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
 
-            create(x);
-        }
+            columns = [];
+
+            for (let x: number = 1; x < window.innerWidth; x += 12) {
+                if (x + 12 > window.innerWidth) break;
+                for (let y: number = 0; y < window.innerHeight; y += 12) paintDot(x, y);
+
+                create(x);
+            }
+
+            setGradientType(OPTIONS.gradientType);
+        };
+
+        resize(null);
+        window.addEventListener('resize', resize);
 
         const update = (column: IColumn): void => {
             let nextItem: boolean = false;
@@ -375,12 +417,12 @@ capsule(() => {
 
             forEach(columns, column => {
                 if (OPTIONS.gradientType !== GradientType.NONE) {
-                    column.hsv += delta / OPTIONS.gradientInterval;
+                    column.hsv += (delta / 100) * OPTIONS.gradientInterval;
 
                     if (column.hsv >= 360.0) column.hsv = 0.0;
                 }
 
-                column.interval -= delta;
+                column.interval -= delta * OPTIONS.speed;
 
                 if (column.interval <= 0) {
                     update(column);
@@ -392,7 +434,6 @@ capsule(() => {
             window.requestAnimationFrame(loop);
         };
 
-        setGradientType(OPTIONS.gradientType);
         lastRender = performance.now();
         window.requestAnimationFrame(loop);
     };

@@ -18,10 +18,20 @@ file that was distributed with this source code.
         <link rel="stylesheet" type="text/css" href="styles.css"/>
     </head>
     <body>
+        <noscript>
+            <strong>Sorry this site requires JavaScript to work!</strong>
+        </noscript>
         <div id="options" style="display: none">
             <div>
                 <span>Base color: </span>
                 <input id="base-color" type="color"/>
+            </div>
+            <div>
+                <span>Speed: </span>
+                <container>
+                    <input id="speed" type="range"/>
+                    <span data-value-for="speed"></span>
+                </container>
             </div>
             <div>
                 <span>Gradient type: </span>
