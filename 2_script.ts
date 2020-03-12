@@ -8,15 +8,10 @@
 
 ///<reference path="1_Utility.ts"/>
 import Color = Utility.Color;
-import Cookie = Utility.Cookie;
 import forEach = Utility.forEach;
 import capsule = Utility.capsule;
 
 capsule(() => {
-    let stack: {
-        setGradientType?: (value: number) => void
-    } = {};
-
     const enum GradientType {
         NONE,
         ALL,
@@ -27,17 +22,6 @@ capsule(() => {
         INTERVAL = 250,
         DEFAULT_BASE_COLOR = '#44ff00',
         DEFAULT_SYMBOLS = 'ｦｱｳｴｵｶｷｹｺｻｼｽｾｿﾀﾂﾃﾅﾆﾇﾈﾊﾋﾎﾏﾐﾑﾒﾓﾔﾕﾗﾘﾜ日(+*;)-|2589Z',
-        MAX_LINE_LENGTH = 30,
-
-        COOKIE_BASE_COLOR = 'base_color',
-        COOKIE_SPEED = 'speed',
-        COOKIE_GRADIENT_TYPE = 'gradient_type',
-        COOKIE_GRADIENT_INTERVAL = 'gradient_interval',
-        COOKIE_LINE_LENGTH = 'line_length',
-        COOKIE_SYMBOLS = 'symbols',
-        COOKIE_HIDE_CURSOR = 'hide_cursor',
-        COOKIE_RESET_ON_FOCUS = 'reset_on_focus',
-        COOKIE_ROTATION = 'rotation'
     }
 
     interface IColumnItem {
@@ -70,7 +54,7 @@ capsule(() => {
         resetOnFocus     : boolean
         rotation         : number,
     } = {
-        baseColor: new Color(68, 255, 0),
+        baseColor: Color.fromHex(Values.DEFAULT_BASE_COLOR),
         speed: 1,
         gradientType: GradientType.NONE,
         gradientInterval: 1,
@@ -79,15 +63,19 @@ capsule(() => {
         rotation: 0
     };
 
-    const canvas: HTMLCanvasElement = <HTMLCanvasElement>document.querySelector('#matrix-canvas');
-    const graphics: CanvasRenderingContext2D = canvas.getContext('2d');
+    const settings: {
+        canvas            : string,
+        baseColor?        : string,
+        symbols           : string,
+        speed?            : number,
+        gradientType?     : number,
+        gradientInterval? : number,
+        lineLength?       : number,
+        rotation?         : number,
+    } = JSON.parse(document.querySelector('script[type="matrix-config"]').innerHTML);
 
-    // States
-    const STATE: {
-        isTyping : boolean
-    } = {
-        isTyping: false
-    };
+    const canvas: HTMLCanvasElement = <HTMLCanvasElement>document.querySelector(settings.canvas ? settings.canvas : '#matrix-canvas');
+    const graphics: CanvasRenderingContext2D = canvas.getContext('2d');
 
     // Chars
     let chars: IChar[] = [];
@@ -143,6 +131,26 @@ capsule(() => {
         columns.push(column);
     };
 
+    const setGradientType = (type: number): void => {
+        switch (type) {
+            case GradientType.NONE: {
+                OPTIONS.gradientType = GradientType.NONE;
+                forEach(columns, column => column.hsv = 0);
+                break;
+            }
+            case GradientType.ALL: {
+                OPTIONS.gradientType = GradientType.ALL;
+                forEach(columns, column => column.hsv = 0);
+                break;
+            }
+            case GradientType.PER: {
+                OPTIONS.gradientType = GradientType.PER;
+                forEach(columns, column => column.hsv = 360 * (column.x / canvas.width));
+                break;
+            }
+        }
+    };
+
     const rebuild = (): void => {
         columns = [];
 
@@ -153,7 +161,7 @@ capsule(() => {
             create(x);
         }
 
-        stack.setGradientType(OPTIONS.gradientType);
+        setGradientType(OPTIONS.gradientType);
     };
 
     const rotate = (angle: number): void => {
@@ -184,261 +192,28 @@ capsule(() => {
         rotate(OPTIONS.rotation);
     };
 
-    // Base color
+    // Apply settings
     capsule(() => {
-        let baseColorInput = <HTMLInputElement>document.querySelector('#base-color');
-        let baseColorCookieValue = Cookie.getOrSet(Values.COOKIE_BASE_COLOR, Values.DEFAULT_BASE_COLOR).getValue();
+        // Base Color
+        OPTIONS.baseColor = Color.fromHex(settings.baseColor ? settings.baseColor : Values.DEFAULT_BASE_COLOR);
 
-        baseColorInput.value = `${baseColorCookieValue}`;
+        // Speed
+        OPTIONS.speed = Math.max(1, Math.min(16, settings.speed ?  settings.speed : 2));
 
-        const setBaseColor = (inputValue: string): void => {
-            OPTIONS.baseColor.fromHex(inputValue);
+        // Gradient type
+        OPTIONS.gradientType = Math.min(2, Math.max(0, settings.gradientType ? settings.gradientType : 0));
 
-            Cookie.replace(Values.COOKIE_BASE_COLOR, inputValue);
-        };
+        // Gradient interval
+        OPTIONS.gradientInterval = Math.max(1, Math.min(16, settings.gradientInterval ?  settings.gradientInterval : 2));
 
-        setBaseColor(baseColorInput.value);
-        baseColorInput.addEventListener('input', (e) => setBaseColor(baseColorInput.value));
-    });
+        // Line length
+        OPTIONS.lineLength = Math.min(32, Math.max(2, settings.lineLength ? settings.lineLength : 32));
 
-    // Speed
-    capsule(() => {
-        let speedInput = <HTMLInputElement>document.querySelector('#speed');
-        let speedValueView = <HTMLElement>document.querySelector('span[data-value-for="speed"]');
-        let speedCookieValue: number = parseInt(Cookie.getOrSet(Values.COOKIE_SPEED, '0').getValue());
+        // Symbols
+        convertToIChar(settings.symbols ? settings.symbols : Values.DEFAULT_SYMBOLS);
 
-        const setSpeed = (inputValue: number): void => {
-            let adjustedValue = inputValue - (inputValue % 25);
-
-            speedInput.value = `${adjustedValue}`;
-
-            let value = Math.max(1, Math.pow(2, adjustedValue / 25));
-
-            OPTIONS.speed = value;
-            speedValueView.innerHTML = `(x ${value})`;
-
-            Cookie.replace(Values.COOKIE_SPEED, `${adjustedValue}`);
-        };
-
-        setSpeed(speedCookieValue);
-        speedInput.addEventListener('input', (e) => setSpeed(parseInt(speedInput.value)));
-    });
-
-    // Gradient
-    capsule(() => {
-        const setGradientType = (type: number): void => {
-            switch (type) {
-                case GradientType.NONE: {
-                    OPTIONS.gradientType = GradientType.NONE;
-                    forEach(columns, column => column.hsv = 0);
-                    break;
-                }
-                case GradientType.ALL: {
-                    OPTIONS.gradientType = GradientType.ALL;
-                    forEach(columns, column => column.hsv = 0);
-                    break;
-                }
-                case GradientType.PER: {
-                    OPTIONS.gradientType = GradientType.PER;
-                    forEach(columns, column => column.hsv = 360 * (column.x / canvas.width));
-                    break;
-                }
-            }
-
-            Cookie.replace(Values.COOKIE_GRADIENT_TYPE, `${type}`);
-        };
-
-        stack['setGradientType'] = setGradientType;
-
-        let gradientTypeInput = <HTMLInputElement>document.querySelector('#gradient-type');
-
-        OPTIONS.gradientType = parseInt(Cookie.getOrSet(Values.COOKIE_GRADIENT_TYPE, '0').getValue());
-        gradientTypeInput.value = `${OPTIONS.gradientType}`;
-
-        gradientTypeInput.addEventListener('input', (e) => setGradientType(parseInt(gradientTypeInput.value)));
-
-        /* Reset gradient when visibility changes to fix out of sync */
-        const eventResetOnFocus = (e: Event, hidden: string) => {
-            if ((hidden && document[hidden]) || !OPTIONS.resetOnFocus) return;
-
-            setGradientType(OPTIONS.gradientType);
-        };
-
-        if (document.hidden !== undefined) {
-            document.addEventListener('visibilitychange', (e) => eventResetOnFocus(e, 'hidden'));
-                   // @ts-ignore
-        } else if (document.webkitHidden) {
-            document.addEventListener('webkitvisibilitychange', (e) => eventResetOnFocus(e, 'webkitHidden'));
-                   // @ts-ignore
-        } else if (document.msHidden) {
-            document.addEventListener('msvisibilitychange', (e) => eventResetOnFocus(e, 'msHidden'));
-        } else {
-            window.addEventListener('focus', (e) => eventResetOnFocus(e, null));
-        }
-    });
-
-    // Gradient Interval
-    capsule(() => {
-        let gradientIntervalInput = <HTMLInputElement>document.querySelector('#gradient-interval');
-        let gradientIntervalValueView = <HTMLElement>document.querySelector('span[data-value-for="gradient-interval"]');
-        let gradientIntervalCookieValue = parseInt(Cookie.getOrSet(Values.COOKIE_GRADIENT_INTERVAL, '0').getValue());
-
-        gradientIntervalInput.value = `${gradientIntervalCookieValue}`;
-
-        const setGradientInterval = (inputValue: number): void => {
-            let adjustedValue = inputValue - (inputValue % 25);
-
-            gradientIntervalInput.value = `${adjustedValue}`;
-
-            let value = Math.max(1, Math.pow(2, adjustedValue / 25));
-
-            OPTIONS.gradientInterval = value;
-            gradientIntervalValueView.innerHTML = `(x ${value})`;
-
-            Cookie.replace(Values.COOKIE_GRADIENT_INTERVAL, `${adjustedValue}`);
-        };
-
-        setGradientInterval(gradientIntervalCookieValue);
-        gradientIntervalInput.addEventListener('input', (e) => setGradientInterval(parseInt(gradientIntervalInput.value)));
-    });
-
-    // Line Length
-    capsule(() => {
-        let lineLengthInput = <HTMLInputElement>document.querySelector('#line-length');
-        let lineLengthValueView = <HTMLElement>document.querySelector('span[data-value-for="line-length"]');
-        let lineLengthCookieValue = parseInt(Cookie.getOrSet(Values.COOKIE_LINE_LENGTH, '100').getValue());
-
-        lineLengthInput.value = `${lineLengthCookieValue}`;
-
-        const setLineLength = (inputValue: number): void => {
-            let value: number = Math.floor((Values.MAX_LINE_LENGTH / 100) * inputValue);
-
-            lineLengthInput.value = `${Math.ceil((value / Values.MAX_LINE_LENGTH) * 100)}`;
-
-            value += 2;
-
-            OPTIONS.lineLength = value;
-            lineLengthValueView.innerHTML = `(${value})`;
-
-            Cookie.replace(Values.COOKIE_LINE_LENGTH, `${inputValue}`);
-        };
-
-        setLineLength(lineLengthCookieValue);
-        lineLengthInput.addEventListener('input', (e) => setLineLength(parseInt(lineLengthInput.value)));
-    });
-
-    // Symbols
-    capsule(() => {
-        let symbolInput = <HTMLInputElement>document.querySelector('#symbols');
-        let symbolCookieValue = Cookie.getOrSet(Values.COOKIE_SYMBOLS, Values.DEFAULT_SYMBOLS).getValue();
-
-        const setSymbols = (inputValue: string): void => {
-            if (!inputValue || inputValue.length === 0) return;
-
-            convertToIChar(inputValue);
-
-            Cookie.replace(Values.COOKIE_SYMBOLS, `${inputValue}`);
-        };
-
-        (<HTMLElement>document.querySelector('#symbol-set')).addEventListener('click', (e) => {
-            setSymbols(symbolInput.value);
-        });
-
-        (<HTMLElement>document.querySelector('#symbol-reset')).addEventListener('click', (e) => {
-            symbolInput.value = Values.DEFAULT_SYMBOLS;
-            setSymbols(symbolInput.value);
-        });
-
-        symbolInput.value = symbolCookieValue;
-        setSymbols(symbolCookieValue);
-
-        symbolInput.addEventListener('focus', (e) => STATE.isTyping = true);
-        symbolInput.addEventListener('blur', (e) => STATE.isTyping = false);
-    });
-
-    // Hide cursor
-    capsule(() => {
-        let hideCursorInput = <HTMLInputElement>document.querySelector('#hide-cursor');
-        let hideCursorCookieValue: boolean = Cookie.getOrSet(Values.COOKIE_HIDE_CURSOR, 'true').getValue() === 'true';
-
-        hideCursorInput.checked = hideCursorCookieValue;
-
-        const setHideCursor = (inputValue: boolean) => {
-            (<HTMLElement>document.querySelector('.matrix-container')).style['cursor'] = inputValue ? 'none' : 'default';
-
-            Cookie.replace(Values.COOKIE_HIDE_CURSOR, `${inputValue}`);
-        };
-
-        setHideCursor(hideCursorCookieValue);
-        hideCursorInput.addEventListener('input', (e) => setHideCursor(hideCursorInput.checked));
-    });
-
-    // Reset on focus
-    capsule(() => {
-        let resetOnFocusInput = <HTMLInputElement>document.querySelector('#reset-on-focus');
-        let resetOnFocusCookieValue: boolean = Cookie.getOrSet(Values.COOKIE_RESET_ON_FOCUS, 'true').getValue() === 'true';
-
-        resetOnFocusInput.checked = resetOnFocusCookieValue;
-
-        const setResetOnFocus = (inputValue: boolean) => {
-            OPTIONS.resetOnFocus = inputValue;
-
-            Cookie.replace(Values.COOKIE_RESET_ON_FOCUS, `${inputValue}`);
-        };
-
-        setResetOnFocus(resetOnFocusCookieValue);
-        resetOnFocusInput.addEventListener('input', (e) => setResetOnFocus(resetOnFocusInput.checked));
-    });
-
-    // Rotation
-    capsule(() => {
-        let rotationInput = <HTMLInputElement>document.querySelector('#rotation');
-        let rotationCookieValue = parseInt(Cookie.getOrSet(Values.COOKIE_ROTATION, '0').getValue());
-        let rotationValueView = <HTMLElement>document.querySelector('span[data-value-for="rotation"]');
-
-        rotationInput.value = `${rotationCookieValue}`;
-
-        const calcRotation = (inputValue: number): number => {
-            let rotation = Math.trunc((inputValue / 100) * 360);
-
-            rotationInput.value = `${(rotation / 360) * 100}`;
-            rotationValueView.innerHTML = `(${rotation} &deg;)`;
-
-            Cookie.replace(Values.COOKIE_ROTATION, rotationInput.value);
-
-            return rotation;
-        };
-
-        const setRotation = (inputValue: number): void => {
-            rotate(calcRotation(inputValue));
-        };
-
-        (<HTMLElement>document.querySelector('#rotation-set')).addEventListener('click', (e) => {
-            setRotation(parseInt(rotationInput.value));
-        });
-
-        (<HTMLElement>document.querySelector('#rotation-reset')).addEventListener('click', (e) => {
-            rotationInput.value = '0';
-            setRotation(0);
-        });
-
-        setRotation(rotationCookieValue);
-
-        rotationInput.addEventListener('input', (e) => {
-            rotationValueView.innerHTML = `(${calcRotation(parseInt(rotationInput.value))} &deg;)`
-        });
-    });
-
-    // Window things
-
-    /* Options Panel */
-    window.addEventListener('keyup', (e) => {
-        if (e.key && e.key.toLowerCase() === 'o' && !STATE.isTyping) {
-            let options = <HTMLElement>document.querySelector('#options');
-
-            if (options.style['display'] === '') options.style['display'] = 'none';
-            else options.style['display'] = '';
-        }
+        // Rotation
+        OPTIONS.rotation = Math.min(360, Math.max(0, settings.rotation ? settings.rotation : 0));
     });
 
     // Graphics

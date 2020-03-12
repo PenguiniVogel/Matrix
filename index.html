@@ -16,77 +16,18 @@ file that was distributed with this source code.
 
         <link rel="icon" href="icon.gif"/>
         <link rel="stylesheet" type="text/css" href="styles.css"/>
+
+        <script type="matrix-config">
+            {
+                "speed": 2,
+                "gradientType": 2,
+                "gradientInterval": 2,
+                "lineLength": 32,
+                "rotation": 45
+            }
+        </script>
     </head>
     <body>
-        <noscript>
-            <strong>Sorry this site requires JavaScript to work!</strong>
-        </noscript>
-        <div id="options" style="display: none">
-            <div>
-                <label for="base-color">Base Color: </label><input id="base-color" type="color"/>
-            </div>
-            <div>
-                <label for="speed">Speed: </label>
-                <container>
-                    <input id="speed" type="range"/>
-                    <span data-value-for="speed"></span>
-                </container>
-            </div>
-            <div>
-                <label for="gradient-type">Gradient type: </label>
-                <select id="gradient-type">
-                    <option value="0" selected>None</option>
-                    <option value="1">All</option>
-                    <option value="2">Per</option>
-                </select>
-            </div>
-            <div>
-                <label for="gradient-interval">Gradient Interval: </label>
-                <container>
-                    <input id="gradient-interval" type="range"/>
-                    <span data-value-for="gradient-interval"></span>
-                </container>
-            </div>
-            <div>
-                <label for="line-length">Max line length: </label>
-                <container>
-                    <input id="line-length" type="range"/>
-                    <span data-value-for="line-length"></span>
-                </container>
-            </div>
-            <div>
-                <label for="symbols">Symbols: </label>
-                <container style="display: grid; grid-template-columns: auto auto;">
-                    <input id="symbols"/>
-                    <container style="display: grid; grid-template-rows: auto auto; padding-left: 4px;">
-                        <button id="symbol-set" type="button">Set</button>
-                        <button id="symbol-reset" type="button">Reset</button>
-                    </container>
-                </container>
-            </div>
-            <div>
-                <label for="hide-cursor">Hide cursor: </label>
-                <input id="hide-cursor" type="checkbox" checked/>
-            </div>
-            <div>
-                <label for="reset-on-focus">Reset on focus change: </label>
-                <input id="reset-on-focus" type="checkbox" checked/>
-            </div>
-            <div>
-                <label for="rotation">Rotation: </label>
-                <conatiner style="display: grid; grid-template-columns: auto auto;">
-                    <container>
-                        <input id="rotation" type="range"/>
-                        <span data-value-for="rotation"></span>
-                    </container>
-                    <container style="display: grid; grid-template-rows: auto auto; padding-left: 4px;">
-                        <button id="rotation-set" type="button">Set</button>
-                        <button id="rotation-reset" type="button">Reset</button>
-                    </container>
-                </conatiner>
-            </div>
-        </div>
-
         <container class="matrix-container">
             <canvas id="matrix-canvas"></canvas>
         </container>
