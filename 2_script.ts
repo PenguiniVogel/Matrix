@@ -13,6 +13,10 @@ import forEach = Utility.forEach;
 import capsule = Utility.capsule;
 
 capsule(() => {
+    let stack: {
+        setGradientType?: (value: number) => void
+    } = {};
+
     const enum GradientType {
         NONE,
         ALL,
@@ -32,7 +36,8 @@ capsule(() => {
         COOKIE_LINE_LENGTH = 'line_length',
         COOKIE_SYMBOLS = 'symbols',
         COOKIE_HIDE_CURSOR = 'hide_cursor',
-        COOKIE_RESET_ON_FOCUS = 'reset_on_focus'
+        COOKIE_RESET_ON_FOCUS = 'reset_on_focus',
+        COOKIE_ROTATION = 'rotation'
     }
 
     interface IColumnItem {
@@ -63,17 +68,18 @@ capsule(() => {
         gradientInterval : number,
         lineLength       : number,
         resetOnFocus     : boolean
+        rotation         : number,
     } = {
         baseColor: new Color(68, 255, 0),
         speed: 1,
         gradientType: GradientType.NONE,
         gradientInterval: 1,
         lineLength: 14,
-        resetOnFocus: true
+        resetOnFocus: true,
+        rotation: 0
     };
 
-    let columns: IColumn[] = [];
-    const canvas: HTMLCanvasElement = <HTMLCanvasElement>document.getElementById('matrix-canvas');
+    const canvas: HTMLCanvasElement = <HTMLCanvasElement>document.querySelector('#matrix-canvas');
     const graphics: CanvasRenderingContext2D = canvas.getContext('2d');
 
     // States
@@ -86,6 +92,9 @@ capsule(() => {
     // Chars
     let chars: IChar[] = [];
 
+    // Columns
+    let columns: IColumn[] = [];
+
     const convertToIChar = (line: string): void => {
         if (line === null || line.length === 0) line = Values.DEFAULT_SYMBOLS;
 
@@ -96,6 +105,83 @@ capsule(() => {
                 char    : line[i]
             });
         }
+    };
+
+    const paintRect = (x: number, y: number, width: number, height: number, color: string = '#000000'): void => {
+        graphics.fillStyle = color;
+        graphics.fillRect(x, y, width, height);
+    };
+
+    const paintDot = (x: number, y: number, column?: IColumn): void => {
+        let alpha = Math.max(0.05, Math.min(0.5, Math.random()));
+
+        if (OPTIONS.gradientType !== GradientType.NONE && column) graphics.fillStyle = `hsla(${column.hsv}, 100%, 50%, ${alpha})`;
+        else graphics.fillStyle = OPTIONS.baseColor.toRGBA(alpha);
+
+        graphics.fillRect(x + 5, y + 4, 2, 2);
+    };
+
+    const createItem = (): IColumnItem => {
+        return {
+            letters: 0,
+            max    : Math.floor(Math.random() * (OPTIONS.lineLength / 2)) + (OPTIONS.lineLength / 2),
+            letterY: 10,
+            erasing: false,
+            eraseY : 0,
+            delay  : Math.floor(Math.random() * 8000) + 2000
+        };
+    };
+
+    const create = (x): void => {
+        let column: IColumn = {
+            x        : x,
+            interval : Math.floor(Values.INTERVAL * Math.random()) + 150,
+            hsv      : 0,
+            items    : [createItem()]
+        };
+
+        columns.push(column);
+    };
+
+    const rebuild = (): void => {
+        columns = [];
+
+        for (let x = 1, width = canvas.width; x < width; x += 12) {
+            if (x + 12 > width) break;
+            for (let y = 0, height = canvas.height; y < height; y += 12) paintDot(x, y);
+
+            create(x);
+        }
+
+        stack.setGradientType(OPTIONS.gradientType);
+    };
+
+    const rotate = (angle: number): void => {
+        OPTIONS.rotation = angle;
+
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+
+        canvas.style['transform'] = `rotateZ(${angle}deg)`;
+
+        let boundingClientRect = canvas.getBoundingClientRect();
+
+        let width = boundingClientRect.right - boundingClientRect.left;
+        let height = boundingClientRect.bottom - boundingClientRect.top;
+
+        canvas.width = width;
+        canvas.height = height;
+
+        canvas.style['transform'] = `translate(${(window.innerWidth - width) / 2}px, ${(window.innerHeight - height) / 2}px) rotateZ(${angle}deg)`;
+
+        rebuild();
+    };
+
+    const resize = (e?): void => {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+
+        rotate(OPTIONS.rotation);
     };
 
     // Base color
@@ -139,29 +225,31 @@ capsule(() => {
     });
 
     // Gradient
-    const setGradientType = (type: number): void => {
-        switch (type) {
-            case GradientType.NONE: {
-                OPTIONS.gradientType = GradientType.NONE;
-                forEach(columns, column => column.hsv = 0);
-                break;
-            }
-            case GradientType.ALL: {
-                OPTIONS.gradientType = GradientType.ALL;
-                forEach(columns, column => column.hsv = 0);
-                break;
-            }
-            case GradientType.PER: {
-                OPTIONS.gradientType = GradientType.PER;
-                forEach(columns, column => column.hsv = 360 * (column.x / window.innerWidth));
-                break;
-            }
-        }
-
-        Cookie.replace(Values.COOKIE_GRADIENT_TYPE, `${type}`);
-    };
-
     capsule(() => {
+        const setGradientType = (type: number): void => {
+            switch (type) {
+                case GradientType.NONE: {
+                    OPTIONS.gradientType = GradientType.NONE;
+                    forEach(columns, column => column.hsv = 0);
+                    break;
+                }
+                case GradientType.ALL: {
+                    OPTIONS.gradientType = GradientType.ALL;
+                    forEach(columns, column => column.hsv = 0);
+                    break;
+                }
+                case GradientType.PER: {
+                    OPTIONS.gradientType = GradientType.PER;
+                    forEach(columns, column => column.hsv = 360 * (column.x / canvas.width));
+                    break;
+                }
+            }
+
+            Cookie.replace(Values.COOKIE_GRADIENT_TYPE, `${type}`);
+        };
+
+        stack['setGradientType'] = setGradientType;
+
         let gradientTypeInput = <HTMLInputElement>document.querySelector('#gradient-type');
 
         OPTIONS.gradientType = parseInt(Cookie.getOrSet(Values.COOKIE_GRADIENT_TYPE, '0').getValue());
@@ -242,22 +330,27 @@ capsule(() => {
     // Symbols
     capsule(() => {
         let symbolInput = <HTMLInputElement>document.querySelector('#symbols');
+        let symbolCookieValue = Cookie.getOrSet(Values.COOKIE_SYMBOLS, Values.DEFAULT_SYMBOLS).getValue();
 
         const setSymbols = (inputValue: string): void => {
+            if (!inputValue || inputValue.length === 0) return;
+
             convertToIChar(inputValue);
 
             Cookie.replace(Values.COOKIE_SYMBOLS, `${inputValue}`);
         };
+
+        (<HTMLElement>document.querySelector('#symbol-set')).addEventListener('click', (e) => {
+            setSymbols(symbolInput.value);
+        });
 
         (<HTMLElement>document.querySelector('#symbol-reset')).addEventListener('click', (e) => {
             symbolInput.value = Values.DEFAULT_SYMBOLS;
             setSymbols(symbolInput.value);
         });
 
-        symbolInput.value = Cookie.getOrSet(Values.COOKIE_SYMBOLS, Values.DEFAULT_SYMBOLS).getValue();
-
-        setSymbols(symbolInput.value);
-        symbolInput.addEventListener('input', (e) => setSymbols(symbolInput.value));
+        symbolInput.value = symbolCookieValue;
+        setSymbols(symbolCookieValue);
 
         symbolInput.addEventListener('focus', (e) => STATE.isTyping = true);
         symbolInput.addEventListener('blur', (e) => STATE.isTyping = false);
@@ -271,7 +364,7 @@ capsule(() => {
         hideCursorInput.checked = hideCursorCookieValue;
 
         const setHideCursor = (inputValue: boolean) => {
-            canvas.style['cursor'] = inputValue ? 'none' : 'default';
+            (<HTMLElement>document.querySelector('.matrix-container')).style['cursor'] = inputValue ? 'none' : 'default';
 
             Cookie.replace(Values.COOKIE_HIDE_CURSOR, `${inputValue}`);
         };
@@ -297,6 +390,45 @@ capsule(() => {
         resetOnFocusInput.addEventListener('input', (e) => setResetOnFocus(resetOnFocusInput.checked));
     });
 
+    // Rotation
+    capsule(() => {
+        let rotationInput = <HTMLInputElement>document.querySelector('#rotation');
+        let rotationCookieValue = parseInt(Cookie.getOrSet(Values.COOKIE_ROTATION, '0').getValue());
+        let rotationValueView = <HTMLElement>document.querySelector('span[data-value-for="rotation"]');
+
+        rotationInput.value = `${rotationCookieValue}`;
+
+        const calcRotation = (inputValue: number): number => {
+            let rotation = Math.trunc((inputValue / 100) * 360);
+
+            rotationInput.value = `${(rotation / 360) * 100}`;
+            rotationValueView.innerHTML = `(${rotation} &deg;)`;
+
+            Cookie.replace(Values.COOKIE_ROTATION, rotationInput.value);
+
+            return rotation;
+        };
+
+        const setRotation = (inputValue: number): void => {
+            rotate(calcRotation(inputValue));
+        };
+
+        (<HTMLElement>document.querySelector('#rotation-set')).addEventListener('click', (e) => {
+            setRotation(parseInt(rotationInput.value));
+        });
+
+        (<HTMLElement>document.querySelector('#rotation-reset')).addEventListener('click', (e) => {
+            rotationInput.value = '0';
+            setRotation(0);
+        });
+
+        setRotation(rotationCookieValue);
+
+        rotationInput.addEventListener('input', (e) => {
+            rotationValueView.innerHTML = `(${calcRotation(parseInt(rotationInput.value))} &deg;)`
+        });
+    });
+
     // Window things
 
     /* Options Panel */
@@ -312,61 +444,10 @@ capsule(() => {
     // Graphics
 
     const init = (): void => {
+
         graphics.scale(1.2, 1.2);
 
-        const paintRect = (x: number, y: number, width: number, height: number, color: string = '#000000'): void => {
-            graphics.fillStyle = color;
-            graphics.fillRect(x, y, width, height);
-        };
-
-        const paintDot = (x: number, y: number, column?: IColumn): void => {
-            let alpha = Math.max(0.05, Math.min(0.5, Math.random()));
-
-            if (OPTIONS.gradientType !== GradientType.NONE && column) graphics.fillStyle = `hsla(${column.hsv}, 100%, 50%, ${alpha})`;
-            else graphics.fillStyle = OPTIONS.baseColor.toRGBA(alpha);
-
-            graphics.fillRect(x + 5, y + 4, 2, 2);
-        };
-
-        const createItem = (): IColumnItem => {
-            return {
-                letters: 0,
-                max    : Math.floor(Math.random() * (OPTIONS.lineLength / 2)) + (OPTIONS.lineLength / 2),
-                letterY: 10,
-                erasing: false,
-                eraseY : 0,
-                delay  : Math.floor(Math.random() * 8000) + 2000
-            };
-        };
-
-        const create = (x): void => {
-            let column: IColumn = {
-                x        : x,
-                interval : Math.floor(Values.INTERVAL * Math.random()) + 150,
-                hsv      : 0,
-                items    : [createItem()]
-            };
-
-            columns.push(column);
-        };
-
-        const resize = (e: Event): void => {
-            canvas.width = window.innerWidth;
-            canvas.height = window.innerHeight;
-
-            columns = [];
-
-            for (let x: number = 1; x < window.innerWidth; x += 12) {
-                if (x + 12 > window.innerWidth) break;
-                for (let y: number = 0; y < window.innerHeight; y += 12) paintDot(x, y);
-
-                create(x);
-            }
-
-            setGradientType(OPTIONS.gradientType);
-        };
-
-        resize(null);
+        resize();
         window.addEventListener('resize', resize);
 
         const update = (column: IColumn): void => {
@@ -406,9 +487,9 @@ capsule(() => {
 
             if (nextItem) column.items.push(createItem());
 
-            column.items = column.items.filter(item => item.eraseY < window.innerHeight);
+            column.items = column.items.filter(item => item.eraseY < canvas.height);
 
-            paintRect(column.x, 0, 12, window.innerHeight, 'rgba(0, 0, 0, 0.1)');
+            paintRect(column.x, 0, 12, canvas.height, 'rgba(0, 0, 0, 0.1)');
         };
 
         let lastRender = 0;

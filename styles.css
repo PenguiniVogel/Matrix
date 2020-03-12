@@ -1,4 +1,4 @@
-/**
+/*
  https://github.com/FelixVogel/Matrix
  Copyright (c) 2020 Felix Vogel
 
@@ -10,11 +10,15 @@ body {
 	background-color: #000000;
 }
 
+/*
+Option styles
+ */
+
 #options {
 	cursor: auto;
 	z-index: 2;
 	position: absolute;
-	padding: 1px;
+	padding: 4px 6px 6px 4px;
 	background-color: #ffffff;
 	display: grid;
 	grid-template-rows: auto;
@@ -23,33 +27,28 @@ body {
 #options div {
 	display: grid;
 	grid-template-columns: 155px auto;
+	padding-bottom: 4px;
 }
 
-#options span {
+#options label {
 	line-height: 26px;
 	padding-left: 3px;
 	max-width: 150px;
 	min-width: 150px;
 }
 
-#symbol-reset {
-	border: 2px solid #ff3700;
-	border-radius: 90%;
-	padding-left: 16px !important;
-	margin-left: 16px;
-	cursor: pointer;
-	transition: border 1s, transform;
-}
+/*
+Canvas style
+ */
 
-#symbol-reset:hover {
-	border: 4px solid #ff3700;
-	transform: translate(-2px);
-}
-
-#matrix-canvas {
+.matrix-container {
+	background-color: #000000;
+	overflow: hidden;
 	z-index: 1;
 	position: absolute;
 	top: 0;
 	right: 0;
 	left: 0;
+	width: 100%;
+	height: 100%;
 }

@@ -5,7 +5,8 @@
 *.js
 *.js.map
 
-# Ignore APPEND file
+# Ignore directories or files
+test
 APPEND.txt
 
 # Don't ignore distribute min.js (GitHub Pages)
