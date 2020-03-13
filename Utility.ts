@@ -10,41 +10,14 @@ module Utility {
 
     export class Color {
 
-        private r: number;
-        private g: number;
-        private b: number;
-        private a: number;
-
-        constructor(r: number, g: number, b: number, a: number = 255) {
-            this.r = r;
-            this.g = g;
-            this.b = b;
-            this.a = a;
+        public static fromRGBA(r: number, g: number, b: number, a: number = 255): Color {
+            return new Color(r, g, b, a);
         }
 
-        public fromRGBA(r: number, g: number, b: number, a: number): Color {
-            this.r = Math.max(0, Math.min(255, r));
-            this.g = Math.max(0, Math.min(255, g));
-            this.b = Math.max(0, Math.min(255, b));
-            this.a = Math.max(0, Math.min(255, a));
+        public static fromHex(hex: string): Color {
+            if (!hex.match(/^#(:?[0-9a-fA-F]{2}){1,3}$/g)) return null;
 
-            return this;
-        }
-
-        public toRGBA(a: number = this.a): string {
-            return `rgba(${this.r}, ${this.g}, ${this.b}, ${a})`;
-        }
-
-        public fromRGB(r: number, g: number, b: number): Color {
-            return this.fromRGBA(r, g, b, 255);
-        }
-
-        public toRGB(): string {
-            return `rgb(${this.r}, ${this.g}, ${this.b})`;
-        }
-
-        public fromHex(hex: string): Color {
-            if (!hex.match(/^#(:?[0-9a-fA-F]{2}){1,3}$/g)) return this;
+            let r, g, b;
 
             hex = hex.substr(1);
 
@@ -52,17 +25,17 @@ module Utility {
                 let parsed = parseInt(hex.substr(i, 2), 16);
                 switch (i) {
                     case 0: {
-                        this.r = parsed;
+                        r = parsed;
                         break;
                     }
 
                     case 2: {
-                        this.g = parsed;
+                        g = parsed;
                         break;
                     }
 
                     case 4: {
-                        this.b = parsed;
+                        b = parsed;
                         break;
                     }
 
@@ -72,7 +45,29 @@ module Utility {
 
             }
 
-            return this;
+            return new Color(r, g, b);
+        }
+
+        // Class
+
+        private readonly r: number;
+        private readonly g: number;
+        private readonly b: number;
+        private readonly a: number;
+
+        constructor(r: number, g: number, b: number, a: number = 255) {
+            this.r = Math.max(0, Math.min(255, r));
+            this.g = Math.max(0, Math.min(255, g));
+            this.b = Math.max(0, Math.min(255, b));
+            this.a = Math.max(0, Math.min(255, a));
+        }
+
+        public toRGBA(a: number = this.a): string {
+            return `rgba(${this.r}, ${this.g}, ${this.b}, ${a})`;
+        }
+
+        public toRGB(): string {
+            return `rgb(${this.r}, ${this.g}, ${this.b})`;
         }
 
         public toHex(): string {

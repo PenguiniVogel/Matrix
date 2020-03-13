@@ -6,7 +6,7 @@
  file that was distributed with this source code.
  */
 
-///<reference path="1_Utility.ts"/>
+///<reference path="Utility.ts"/>
 import Color = Utility.Color;
 import Cookie = Utility.Cookie;
 import forEach = Utility.forEach;
@@ -192,7 +192,7 @@ capsule(() => {
         baseColorInput.value = `${baseColorCookieValue}`;
 
         const setBaseColor = (inputValue: string): void => {
-            OPTIONS.baseColor.fromHex(inputValue);
+            OPTIONS.baseColor = Color.fromHex(inputValue);
 
             Cookie.replace(Values.COOKIE_BASE_COLOR, inputValue);
         };
