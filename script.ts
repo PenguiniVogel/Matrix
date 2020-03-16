@@ -1,28 +1,12 @@
 /**
- MIT License
-
+ https://github.com/FelixVogel/Matrix
  Copyright (c) 2020 Felix Vogel
 
- Permission is hereby granted, free of charge, to any person obtaining a copy
- of this software and associated documentation files (the "Software"), to deal
- in the Software without restriction, including without limitation the rights
- to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- copies of the Software, and to permit persons to whom the Software is
- furnished to do so, subject to the following conditions:
-
- The above copyright notice and this permission notice shall be included in all
- copies or substantial portions of the Software.
-
- THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- SOFTWARE.
+ For the full copyright and license information, please view the LICENSE
+ file that was distributed with this source code.
  */
 
-///<reference path="1_Utility.ts"/>
+///<reference path="Utility.ts"/>
 import Color = Utility.Color;
 import forEach = Utility.forEach;
 
@@ -35,12 +19,6 @@ const enum GradientType {
 
 const enum Values {
     INTERVAL = 250
-}
-
-interface Options {
-    textColor: Color,
-    gradientType: GradientType,
-    lineLength: number
 }
 
 interface IColumnItem {
@@ -64,25 +42,132 @@ interface IChar {
     char: string
 }
 
-const options: Options = {
+const options: {
+    textColor     : Color,
+    gradientType  : GradientType,
+    gradientSpeed : number,
+    lineLength    : number,
+    lineSpeed     : number,
+    rotation      : number
+} = {
     textColor: new Color(68, 255, 0),
     gradientType: GradientType.NONE,
-    lineLength: 6
+    gradientSpeed: 1,
+    lineLength: 32,
+    lineSpeed: 1,
+    rotation: 0
 };
 
-const columns: IColumn[] = [];
+let columns: IColumn[] = [];
 
 const canvas: HTMLCanvasElement = <HTMLCanvasElement>document.getElementById('matrix-canvas');
+const graphics: CanvasRenderingContext2D = canvas.getContext('2d');
+
+const setGradient = (): void => {
+    switch (options.gradientType) {
+        case GradientType.NONE: {
+            forEach(columns, column => column.hsv = 0);
+            break;
+        }
+        case GradientType.ALL: {
+            forEach(columns, column => column.hsv = 0);
+            break;
+        }
+        case GradientType.PER: {
+            forEach(columns, column => column.hsv = 360 * (column.x / window.innerWidth));
+            break;
+        }
+        case GradientType.AUDIO: {
+            forEach(columns, column => column.hsv = 60);
+            break;
+        }
+    }
+};
+
+const rotate = (angle: number): void => {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+
+    canvas.style['transform'] = `rotateZ(${angle}deg)`;
+
+    let boundingClientRect = canvas.getBoundingClientRect();
+
+    let width = boundingClientRect.right - boundingClientRect.left;
+    let height = boundingClientRect.bottom - boundingClientRect.top;
+
+    canvas.width = width;
+    canvas.height = height;
+
+    canvas.style['transform'] = `translate(${(window.innerWidth - width) / 2}px, ${(window.innerHeight - height) / 2}px) rotateZ(${angle}deg)`;
+
+    rebuild();
+};
+
+const rebuild = (): void => {
+    columns = [];
+
+    for (let x = 1, width = canvas.width; x < width; x += 12) {
+        if (x + 12 > width) break;
+        for (let y = 0, height = canvas.height; y < height; y += 12) paintDot(x, y);
+
+        create(x);
+    }
+
+    setGradient();
+};
+
+const paintRect = (x: number, y: number, width: number, height: number, color: string = '#000000'): void => {
+    graphics.fillStyle = color;
+    graphics.fillRect(x, y, width, height);
+};
+
+const paintDot = (x: number, y: number, column?: IColumn): void => {
+    let alpha = Math.max(0.05, Math.min(0.5, Math.random()));
+
+    if (options.gradientType !== GradientType.NONE && column) graphics.fillStyle = `hsla(${column.hsv}, 100%, 50%, ${alpha})`;
+    else graphics.fillStyle = options.textColor.toRGBA(alpha);
+
+    graphics.fillRect(x + 5, y + 4, 2, 2);
+};
+
+const createItem = (): IColumnItem => {
+    return {
+        letters: 0,
+        max: Math.floor(Math.random() * (options.lineLength / 2)) + (options.lineLength / 2),
+        letterY: 10,
+        erasing: false,
+        eraseY: 0,
+        delay: Math.floor(Math.random() * 8000) + 2000
+    };
+};
+
+const create = (x): void => {
+    let column: IColumn = {
+        x: x,
+        interval: Math.floor(Values.INTERVAL * Math.random()) + 150,
+        hsv: 0,
+        items: [createItem()]
+    };
+
+    columns.push(column);
+};
+
+for (let x: number = 1; x < window.innerWidth; x += 12) {
+    if (x + 12 > window.innerWidth) break;
+    for (let y: number = 0; y < window.innerHeight; y += 12) paintDot(x, y);
+
+    create(x);
+}
 
 const resize = (e?) => {
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
+
+    rotate(options.rotation);
 };
 
 resize();
 window.addEventListener('resize', resize);
-
-const graphics: CanvasRenderingContext2D = canvas.getContext('2d');
 
 let chars: IChar[] = [];
 
@@ -102,21 +187,34 @@ window.wallpaperPropertyListener = {
         if (properties.schemecolor) {
             let color = properties.schemecolor.value.split(' ').map(segment => Math.min(255, Math.ceil(parseFloat(segment) * 255)));
 
-            options.textColor.fromRGB(color[0], color[1], color[2]);
+            options.textColor = Color.fromRGBA(color[0], color[1], color[2]);
         }
 
         if (properties.gradienttype) {
-            options.gradientType = properties.gradienttype.value;
+            options.gradientType = parseInt(properties.gradienttype.value);
             setGradient();
+        }
+
+        if (properties.gradientspeed) {
+            options.gradientSpeed = parseInt(properties.gradientspeed.value);
         }
 
         if (properties.linelength) {
             options.lineLength = parseInt(properties.linelength.value);
         }
 
+        if (properties.linespeed) {
+            options.lineSpeed = parseInt(properties.linespeed.value);
+        }
+
         if (properties.symbols) {
             if (properties.symbols.value === '') convertToIChar('ｦｱｳｴｵｶｷｹｺｻｼｽｾｿﾀﾂﾃﾅﾆﾇﾈﾊﾋﾎﾏﾐﾑﾒﾓﾔﾕﾗﾘﾜ日(+*;)-|2589Z');
             else convertToIChar(properties.symbols.value);
+        }
+
+        if (properties.rotation) {
+            options.rotation = parseInt(properties.rotation.value);
+            resize();
         }
     }
 };
@@ -157,29 +255,6 @@ window.addEventListener('load', (e) => {
     });
 });
 
-// Gradient Settings
-
-const setGradient = (): void => {
-    switch (options.gradientType) {
-        case GradientType.NONE: {
-            forEach(columns, column => column.hsv = 0);
-            break;
-        }
-        case GradientType.ALL: {
-            forEach(columns, column => column.hsv = 0);
-            break;
-        }
-        case GradientType.PER: {
-            forEach(columns, column => column.hsv = 360 * (column.x / window.innerWidth));
-            break;
-        }
-        case GradientType.AUDIO: {
-            forEach(columns, column => column.hsv = 60);
-            break;
-        }
-    }
-};
-
 // Graphics
 
 const init = (): void => {
@@ -187,57 +262,8 @@ const init = (): void => {
 
     graphics.scale(1.2, 1.2);
 
-    const paintRect = (x: number, y: number, width: number, height: number, color: string = '#000000'): void => {
-        graphics.fillStyle = color;
-        graphics.fillRect(x, y, width, height);
-    };
-
-    const paintDot = (x: number, y: number, column?: IColumn): void => {
-        let alpha = Math.max(0.05, Math.min(0.5, Math.random()));
-
-        if (options.gradientType !== GradientType.NONE && column) graphics.fillStyle = `hsla(${column.hsv}, 100%, 50%, ${alpha})`;
-        else graphics.fillStyle = options.textColor.toRGBA(alpha);
-
-        graphics.fillRect(x + 5, y + 4, 2, 2);
-    };
-
-    const createItem = (): IColumnItem => {
-        return {
-            letters: 0,
-            max: Math.floor(Math.random() * (options.lineLength / 2)) + (options.lineLength / 2),
-            letterY: 10,
-            erasing: false,
-            eraseY: 0,
-            delay: Math.floor(Math.random() * 8000) + 2000
-        };
-    };
-
-    const create = (x): void => {
-        let column: IColumn = {
-            x: x,
-            interval: Math.floor(Values.INTERVAL * Math.random()) + 150,
-            hsv: 0,
-            items: [createItem()]
-        };
-
-        columns.push(column);
-    };
-
-    for (let x: number = 1; x < window.innerWidth; x += 12) {
-        if (x + 12 > window.innerWidth) break;
-        for (let y: number = 0; y < window.innerHeight; y += 12) paintDot(x, y);
-
-        create(x);
-    }
-
-    const update = (column: IColumn, delta: number): void => {
+    const update = (column: IColumn): void => {
         let nextItem: boolean = false;
-
-        if (options.gradientType !== GradientType.NONE && options.gradientType !== GradientType.AUDIO) {
-            column.hsv += 1;
-
-            if (column.hsv >= 360) column.hsv = 0;
-        }
 
         forEach(column.items, item => {
             if (item.delay <= 0) {
@@ -273,9 +299,9 @@ const init = (): void => {
 
         if (nextItem) column.items.push(createItem());
 
-        column.items = column.items.filter(item => item.eraseY < window.innerHeight);
+        column.items = column.items.filter(item => item.eraseY < canvas.height);
 
-        paintRect(column.x, 0, 12, window.innerHeight, 'rgba(0, 0, 0, 0.1)');
+        paintRect(column.x, 0, 12, canvas.height, 'rgba(0, 0, 0, 0.1)');
     };
 
     let lastRender = 0;
@@ -283,10 +309,16 @@ const init = (): void => {
         let delta = timestamp - lastRender;
 
         forEach(columns, column => {
-            column.interval -= delta;
+            if (options.gradientType === GradientType.ALL || options.gradientType === GradientType.PER) {
+                column.hsv += (delta / 100) * options.gradientSpeed;
+
+                if (column.hsv >= 360) column.hsv = 0;
+            }
+
+            column.interval -= delta * options.lineSpeed;
 
             if (column.interval <= 0) {
-                update(column, delta);
+                update(column);
                 column.interval = Math.floor(Values.INTERVAL * Math.random()) + 150;
             }
         });
