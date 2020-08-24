@@ -1,0 +1,18 @@
+{
+  "compilerOptions": {
+    "target": "ES3",
+    "lib": ["dom", "es2015", "es2017"],
+    "removeComments": true,
+    "sourceMap": false,
+    "outFile": "build/build.js"
+  },
+  "files": [
+    "../../Utility.ts",
+    "../../MatrixSettingListener.ts",
+    "../../Settings.ts",
+    "SettingsStandalone.ts",
+    "../../MatrixFX.ts",
+    "MatrixBasicFX.ts",
+    "../../Matrix.ts"
+  ]
+}

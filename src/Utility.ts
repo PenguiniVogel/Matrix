@@ -8,13 +8,45 @@
 
 module Utility {
 
-    export class Color {
+    export class BaseColor {
 
-        public static fromRGBA(r: number, g: number, b: number, a: number = 255): Color {
-            return new Color(r, g, b, a);
+        public css(): string {
+            return '#ffffff';
         }
 
-        public static fromHex(hex: string): Color {
+    }
+
+    export class HSLColor extends BaseColor {
+
+        public static fixHue(hue: number): number {
+            return hue - (Math.floor(hue / 360.0) * 360.0);
+        }
+
+        private readonly h: number;
+        private readonly s: number;
+        private readonly l: number;
+
+        constructor(h: number, s: number = 100, l: number = 50) {
+            super();
+
+            this.h = h;
+            this.s = s;
+            this.l = l;
+        }
+
+        public css(): string {
+            return `hsl(${this.h}, ${this.s}%, ${this.l}%)`;
+        }
+
+    }
+
+    export class RGBColor extends BaseColor {
+
+        public static fromRGBA(r: number, g: number, b: number, a: number = 255): RGBColor {
+            return new RGBColor(r, g, b, a);
+        }
+
+        public static fromHex(hex: string): RGBColor {
             if (!hex.match(/^#(:?[0-9a-fA-F]{2}){1,3}$/g)) return null;
 
             let r, g, b;
@@ -45,7 +77,7 @@ module Utility {
 
             }
 
-            return new Color(r, g, b);
+            return new RGBColor(r, g, b);
         }
 
         // Class
@@ -56,6 +88,8 @@ module Utility {
         private readonly a: number;
 
         constructor(r: number, g: number, b: number, a: number = 255) {
+            super();
+
             this.r = Math.max(0, Math.min(255, r));
             this.g = Math.max(0, Math.min(255, g));
             this.b = Math.max(0, Math.min(255, b));
@@ -71,25 +105,19 @@ module Utility {
         }
 
         public toHex(): string {
-            return `#${(this.r < 16 ? '0' : '') + this.r.toString(16)}${(this.g < 16 ? '0' : '') + this.g.toString(16)}${(this.b < 16 ? '0' : '') + this.b.toString(16)}`;
+            return `#${this.r < 16 ? '0' : ''}${this.r.toString(16)}${this.g < 16 ? '0' : ''}${this.g.toString(16)}${this.b < 16 ? '0' : ''}${this.b.toString(16)}`;
         }
 
+        public css(): string {
+            return this.toRGBA();
+        }
     }
 
     export class Cookie {
 
         public static get(name: string): Cookie {
-            let index = document.cookie.indexOf(`${name}=`);
-
-            if (index === -1) return null;
-
-            let s = document.cookie.substr(index);
-
-            if (s.indexOf('; ') !== -1) s = s.substring(0, s.indexOf('; '));
-
-            let split = s.split('=');
-
-            return new Cookie(split[0], split[1]);
+            let result = new RegExp(`(?:^|; )${encodeURIComponent(name)}=([^;]*)`).exec(document.cookie);
+            return result ? new Cookie(name, result[1]) : null;
         }
 
         public static getOrSet(name: string, defaultValue: string, date?: Date): Cookie {
@@ -116,8 +144,8 @@ module Utility {
         private expires: Date;
 
         private constructor(name: string, value: string) {
-            this.name = name;
-            this.value = value;
+            this.name = encodeURIComponent(name);
+            this.value = encodeURIComponent(value);
             this.expires = new Date();
 
             // Cookie by default 7 days valid
@@ -131,15 +159,15 @@ module Utility {
         }
 
         public getName(): string {
-            return this.name;
+            return decodeURIComponent(this.name);
         }
 
         public getValue(): string {
-            return this.value;
+            return decodeURIComponent(this.value);
         }
 
         public setValue(value: string): Cookie {
-            this.value = value;
+            this.value = encodeURIComponent(value);
             return this;
         }
 
@@ -161,10 +189,6 @@ module Utility {
         for (let i = 0, l = array.length; i < l; i ++) {
             callback(array[i], i);
         }
-    }
-
-    export function capsule(func: () => void): void {
-        func();
     }
 
 }

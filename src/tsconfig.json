@@ -1,0 +1,9 @@
+{
+  "files": [
+    "Utility.ts",
+    "MatrixSettingListener.ts",
+    "Settings.ts",
+    "MatrixFX.ts",
+    "Matrix.ts"
+  ]
+}

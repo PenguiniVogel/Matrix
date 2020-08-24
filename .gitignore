@@ -9,5 +9,6 @@
 test
 APPEND.txt
 
-# Don't ignore distribute min.js (GitHub Pages)
-!build/min.js
+# Don't ignore standalone distribute min.js (GitHub Pages)
+!src/distributions/standalone/build/build.sh
+!src/distributions/standalone/build/min.js
