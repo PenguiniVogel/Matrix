@@ -1,6 +1,6 @@
 {
   "compilerOptions": {
-    "target": "ES3",
+    "target": "es3",
     "lib": ["dom", "es2015", "es2017"],
     "removeComments": true,
     "sourceMap": false,

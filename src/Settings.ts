@@ -273,7 +273,7 @@ module Settings {
 
     export let onResetOnFocusChanged: (resetOnFocus: boolean) => void;
     export function setResetOnFocus(resetOnFocus: boolean = DEFAULT_RESET_ON_FOCUS): void {
-        if (resetOnFocus != null|undefined && MatrixSettingListener.onResetOnFocusChange) {
+        if (resetOnFocus != null && MatrixSettingListener.onResetOnFocusChange) {
             internal.resetOnFocus = resetOnFocus;
 
             MatrixSettingListener.onResetOnFocusChange(resetOnFocus);

@@ -51,8 +51,8 @@ module Matrix {
             };
         }
 
-        for (let l_Char of symbols) {
-            characters.push(getCharData(l_Char));
+        for (let i = 0; i < symbols.length; i ++) {
+            characters.push(getCharData(symbols[i]));
         }
     };
 
