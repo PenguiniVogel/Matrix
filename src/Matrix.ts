@@ -8,35 +8,70 @@
 
 module Matrix {
 
+    class Timer {
+
+        private static lastLoopTime = 0;
+
+        public static getElapsedTime(): number {
+            let now = Date.now();
+
+            if (this.lastLoopTime == 0) {
+                this.lastLoopTime = now;
+
+                return 0;
+            }
+
+            let delta = now - this.lastLoopTime;
+            this.lastLoopTime = now;
+
+            return delta;
+        }
+
+    }
+
     let canvas: HTMLCanvasElement;
     let context: CanvasRenderingContext2D;
 
+    let fx: MatrixFX.FX;
+
+    let lettersCount = 0;
+    let lettersPerCol = 0;
+
     let timeDelta = 0;
 
-    export function init() {
+    export function init(_fx: MatrixFX.FX = new MatrixBasicFX.BasicFX()) {
         Settings.load();
         Settings.loaded = true;
 
         canvas = document.querySelector(Settings.getSettings().canvasId);
         context = canvas.getContext('2d');
 
-        const interval = 1000 / 60.0;
+        Settings.onload();
+        resize();
+
+        fx = _fx;
+
+        timeDelta = 1_000.0 / 60.0;
+
+        let accumulator = 0;
 
         function loop() {
-            let start = Date.now();
+            accumulator += Timer.getElapsedTime();
 
-            if (timeDelta >= interval) {
+            if (accumulator >= timeDelta) {
+
+                fx.pre(timeDelta / 1000.0);
                 render();
 
-                timeDelta -= interval;
+                accumulator = 0;
             }
 
-            timeDelta += Date.now() - start;
+            console.info(`LoopTime # ${accumulator}`);
 
             window.requestAnimationFrame(loop);
         }
 
-        window.requestAnimationFrame(loop);
+        loop();
     }
 
     MatrixSettingListener.onColorChange = (color) => {};
@@ -58,7 +93,9 @@ module Matrix {
 
     MatrixSettingListener.onSpeedChange = (speed) => {};
 
-    MatrixSettingListener.onColoringModeChange = (gradientType) => {};
+    MatrixSettingListener.onColoringModeChange = (gradientType) => {
+        fx.reset();
+    };
 
     MatrixSettingListener.onColoringModeIntervalChange = (interval) => {};
 
@@ -92,15 +129,40 @@ module Matrix {
         length: number
     }
 
-    let colors: Utility.RGBColor[] = [];
+    let colors: Utility.BaseColor[] = [];
+
+    function getColor(columnIndex?: number, letterIndex?: number): Utility.BaseColor {
+        switch (Settings.getColoringMode()) {
+            case Settings.ColoringMode.BASE:
+                return Settings.getColor();
+            case Settings.ColoringMode.ALL:
+                return fx.getAllColor(timeDelta / 1000.0);
+            case Settings.ColoringMode.PER_COLUMN:
+                return fx.getColumnColor(timeDelta / 1000.0, {
+                    count: columns.length, index: columnIndex
+                });
+            case Settings.ColoringMode.PER_LETTER:
+                return fx.getLetterColor(timeDelta / 1000.0, {
+                    count: columns.length, index: columnIndex
+                }, {
+                    count: lettersCount, index: letterIndex
+                });
+        }
+    }
+
     let columns: Column[] = [];
 
     function resize() {
         let columnWidth = Settings.getColumnWidth();
         let margin = Math.floor((canvas.width - (Math.floor(canvas.width / columnWidth) * columnWidth)) / 2.0);
 
+        lettersPerCol = Math.floor(canvas.height / Settings.getColumnWidth());
+
         colors = [];
+
         columns = [];
+
+        context.scale(columnWidth / 10, columnWidth / 10);
 
         for (let x = margin; x < canvas.width - margin; x += columnWidth) {
             columns.push({
@@ -113,19 +175,25 @@ module Matrix {
                 }]
             });
         }
+
+        lettersCount = lettersPerCol * columns.length;
     }
 
-    canvas.addEventListener('resize', resize);
-    resize();
-
     function render() {
-
+        for (let c = 0, cl = columns.length; c < cl; c ++) {
+            for (let y = 0, ym = canvas.height, ys = Settings.getColumnWidth(); y < ym; y += ys) {
+                context.fillStyle = getColor(c, c * lettersPerCol + y / 12).css();
+                context.fillRect(c * ys, y, 12, 12);
+            }
+        }
     }
 
     export function refresh() {
-        resize();
-
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
         context.clearRect(0, 0, canvas.width, canvas.height);
+
+        resize();
     }
 
     // ----- Old code

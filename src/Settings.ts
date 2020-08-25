@@ -5,7 +5,7 @@ module Settings {
     export const DEFAULT_COLOR = Utility.RGBColor.fromHex('#44ff00');
     export const DEFAULT_SYMBOLS = 'ｦｱｳｴｵｶｷｹｺｻｼｽｾｿﾀﾂﾃﾅﾆﾇﾈﾊﾋﾎﾏﾐﾑﾒﾓﾔﾕﾗﾘﾜ日(+*;)-|2589Z';
     export const DEFAULT_SPEED = 1;
-    export const DEFAULT_COLORING_MODE = ColoringMode.BASE;
+    export const DEFAULT_COLORING_MODE = ColoringMode.PER_LETTER;
     export const DEFAULT_COLORING_MODE_INTERVAL = 20;
     export const DEFAULT_LINE_LENGTH = 16;
     export const DEFAULT_RESET_ON_FOCUS = false;
@@ -17,11 +17,8 @@ module Settings {
     export const enum ColoringMode {
         BASE,
         ALL,
-        PER_LINE,
-        PER_LETTER,
-        CUSTOM_ALL,
-        CUSTOM_PER_LINE,
-        CUSTOM_PER_LETTER
+        PER_COLUMN,
+        PER_LETTER
     }
 
     export const enum SettingNames {
@@ -104,6 +101,8 @@ module Settings {
 
     export let load: () => void;
 
+    export let onload: () => void;
+
     export function getSettings(): Settings {
         return Object.freeze(internal);
     }
@@ -112,6 +111,7 @@ module Settings {
         if (!json) json = {};
 
         setCanvasId(json[SettingNames.CANVAS_ID]);
+        setColumnWidth(json[SettingNames.COLUMN_WIDTH]);
         setColor(json[SettingNames.COLOR]);
         setSymbols(json[SettingNames.SYMBOLS]);
         setSpeed(json[SettingNames.SPEED]);

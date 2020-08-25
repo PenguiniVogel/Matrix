@@ -21,7 +21,7 @@ file that was distributed with this source code.
         <noscript>
             <strong>Sorry this site requires JavaScript to work!</strong>
         </noscript>
-        <div id="options" style="display: none">
+        <div id="options" style="display: none;">
             <div>
                 <label for="base-color">Base Color: </label><input id="base-color" type="color"/>
             </div>
@@ -74,7 +74,7 @@ file that was distributed with this source code.
             </div>
             <div>
                 <label for="rotation">Rotation: </label>
-                <conatiner style="display: grid; grid-template-columns: auto auto;">
+                <container style="display: grid; grid-template-columns: auto auto;">
                     <container>
                         <input id="rotation" type="range"/>
                         <span data-value-for="rotation"></span>
@@ -83,7 +83,7 @@ file that was distributed with this source code.
                         <button id="rotation-set" type="button">Set</button>
                         <button id="rotation-reset" type="button">Reset</button>
                     </container>
-                </conatiner>
+                </container>
             </div>
         </div>
 
@@ -91,6 +91,7 @@ file that was distributed with this source code.
             <canvas id="matrix-canvas"></canvas>
         </container>
 
-        <script src="src/distributions/standalone/build/min.js"></script>
+        <script src="src/distributions/standalone/build/build.js"></script>
+        <script>Matrix.init();</script>
     </body>
 </html>

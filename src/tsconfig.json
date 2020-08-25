@@ -4,6 +4,7 @@
     "MatrixSettingListener.ts",
     "Settings.ts",
     "MatrixFX.ts",
+    "MatrixBasicFX.ts",
     "Matrix.ts"
   ]
 }

@@ -1,11 +1,17 @@
 module MatrixFX {
 
-    export let reset: () => void;
+    export abstract class FX {
 
-    export let getAllColor: (interval: number) => Utility.BaseColor;
+        public abstract reset(): void;
 
-    export let getColumnColor: (interval: number, column: {count: number, index: number}) => Utility.BaseColor;
+        public abstract pre(interval: number): void;
 
-    export let getLetterColor: (interval: number, column: {count: number, index: number}, letter: {count: number, index: number}) => Utility.BaseColor;
+        public abstract getAllColor(interval: number): Utility.BaseColor;
+
+        public abstract getColumnColor(interval: number, column: {count: number, index: number}): Utility.BaseColor;
+
+        public abstract getLetterColor(interval: number, column: {count: number, index: number}, letter: {count: number, index: number}): Utility.BaseColor;
+
+    }
 
 }

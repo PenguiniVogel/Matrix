@@ -21,6 +21,11 @@ module SettingsStandalone {
         save();
     };
 
+    Settings.onload = () => {
+        window.addEventListener('resize', () => Matrix.refresh());
+        Matrix.refresh();
+    };
+
     function save(): void {
         Utility.Cookie.replace(
             CookieKey.NAME,
