@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="Matrix Visuals">
+
+    <title>Matrix</title>
+
+    <link rel="icon" href="icon.gif"/>
+
+    <style>
+        html {
+            background-color: #fff;
+        }
+
+        #debug {
+            z-index: 2;
+            position: absolute;
+            top: 0;
+            right: 0;
+            left: 0;
+            color: #fff;
+            background-color: #000;
+            width: 250px;
+            height: 125px;
+        }
+
+        #matrix-canvas {
+            z-index: 1;
+            position: absolute;
+            top: 0;
+            right: 0;
+            left: 0;
+        }
+    </style>
+</head>
+<body>
+    <div id="debug">
+        <span>Columns: <span id="debug-columns"></span></span>
+        <span>Column[0]: <span id="debug-column-0"></span></span>
+    </div>
+
+    <canvas id="matrix-canvas"></canvas>
+
+    <script src="sources/build/matrix.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>

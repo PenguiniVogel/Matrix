@@ -1,0 +1,14 @@
+{
+  "compilerOptions": {
+    "target": "es3",
+    "lib": ["dom", "es2017", "es2015"],
+    "sourceMap": false,
+    "declaration": true,
+    "outFile": "build/matrix.js"
+  },
+  "files": [
+    "Utility.ts",
+    "MatrixFX.ts",
+    "Matrix.ts"
+  ]
+}
