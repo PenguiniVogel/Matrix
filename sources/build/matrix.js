@@ -276,7 +276,7 @@ var Matrix;
             return {
                 delay: Math.ceil(5 + Math.random() * 15),
                 y: 0,
-                letters: 0,
+                letters: [],
                 length: Math.ceil(hLineLength + Math.random() * hLineLength)
             };
         }
@@ -290,6 +290,7 @@ var Matrix;
             if (columnsAccumulator >= 1000.0 / speed) {
                 for (var _i = 0, columns_1 = columns; _i < columns_1.length; _i++) {
                     var l_Column = columns_1[_i];
+                    ctx.beginPath();
                     ctx.clearRect(l_Column.x, 0, Matrix.COLUMN_SIZE, height);
                     var needsNext = true;
                     for (var _a = 0, _b = l_Column.segments; _a < _b.length; _a++) {
@@ -299,19 +300,17 @@ var Matrix;
                             needsNext = false;
                             continue;
                         }
-                        if (l_Segment.letters < l_Segment.length) {
-                            l_Segment.letters += 1;
+                        if (l_Segment.letters.length < l_Segment.length) {
+                            l_Segment.letters.push(characters[Math.floor(Math.random() * characters.length)]);
                             needsNext = false;
                         }
                         else {
                             ctx.beginPath();
                             ctx.clearRect(l_Column.x, l_Segment.y, Matrix.COLUMN_SIZE, Matrix.COLUMN_SIZE);
-                            ctx.beginPath();
-                            ctx.fillRect(l_Column.x + 5, l_Segment.y + 5, 2, 2);
                             l_Segment.y += Matrix.COLUMN_SIZE;
                         }
-                        for (var i = 0; i < l_Segment.letters; i++) {
-                            paint_letter(l_Column.x, l_Segment.y + Matrix.COLUMN_SIZE * i);
+                        for (var i = 0, l = l_Segment.letters.length; i < l; i++) {
+                            paint_letter(l_Segment.letters[i], l_Column.x, l_Segment.y + Matrix.COLUMN_SIZE * i);
                         }
                     }
                     if (needsNext) {
@@ -324,7 +323,7 @@ var Matrix;
         }
         function render_bg() {
             ctx.save();
-            ctx.globalCompositeOperation = 'destination-over';
+            // ctx.globalCompositeOperation = 'copy';
             ctx.drawImage(bg.getBuffer(), 0, 0);
             ctx.restore();
         }
@@ -349,9 +348,9 @@ var Matrix;
             function loop(timestamp) {
                 var delta = timestamp - lastRender;
                 // ctx.clearRect(0, 0, width, height);
+                // render_bg();
                 columnsAccumulator += delta;
                 render_columns(delta);
-                // render_bg();
                 colorAccumulator += delta;
                 render_color(delta);
                 lastRender = timestamp;
@@ -359,20 +358,19 @@ var Matrix;
             }
             bg = new BG();
             paint_reset();
-            render_bg();
             var lastRender = 0;
             window.requestAnimationFrame(loop);
         }
         RenderEngine.start = start;
         function paint_reset() {
             ctx.clearRect(0, 0, width, height);
+            ctx.scale(1.2, 1.2);
             if (bg)
                 bg.render();
         }
-        function paint_letter(x, y) {
+        function paint_letter(charData, x, y) {
             ctx.beginPath();
             ctx.clearRect(x, y, Matrix.COLUMN_SIZE, Matrix.COLUMN_SIZE);
-            var charData = characters[Math.floor(Math.random() * characters.length)];
             ctx.fillStyle = '#000';
             ctx.beginPath();
             ctx.fillText(charData.char, x + 6 - (charData.width / 2.0), y + 1, Matrix.COLUMN_SIZE);

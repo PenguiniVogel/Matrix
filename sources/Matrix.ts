@@ -158,7 +158,7 @@ module Matrix {
         interface ColumnSegment {
             delay: number,
             y: number,
-            letters: number,
+            letters: CharData[],
             length: number,
         }
 
@@ -183,7 +183,7 @@ module Matrix {
             return {
                 delay: Math.ceil(5 + Math.random() * 15),
                 y: 0,
-                letters: 0,
+                letters: [],
                 length: Math.ceil(hLineLength + Math.random() * hLineLength)
             };
         }
@@ -201,6 +201,7 @@ module Matrix {
 
             if (columnsAccumulator >= 1000.0 / speed) {
                 for (let l_Column of columns) {
+                    ctx.beginPath();
                     ctx.clearRect(l_Column.x, 0, COLUMN_SIZE, height);
 
                     let needsNext = true;
@@ -213,22 +214,19 @@ module Matrix {
                             continue;
                         }
 
-                        if (l_Segment.letters < l_Segment.length) {
-                            l_Segment.letters += 1;
+                        if (l_Segment.letters.length < l_Segment.length) {
+                            l_Segment.letters.push(characters[Math.floor(Math.random() * characters.length)]);
 
                             needsNext = false;
                         } else {
                             ctx.beginPath();
                             ctx.clearRect(l_Column.x, l_Segment.y, COLUMN_SIZE, COLUMN_SIZE);
 
-                            ctx.beginPath();
-                            ctx.fillRect(l_Column.x + 5, l_Segment.y + 5, 2, 2);
-
                             l_Segment.y += COLUMN_SIZE;
                         }
 
-                        for (let i = 0; i < l_Segment.letters; i ++) {
-                            paint_letter(l_Column.x, l_Segment.y + COLUMN_SIZE * i);
+                        for (let i = 0, l = l_Segment.letters.length; i < l; i ++) {
+                            paint_letter(l_Segment.letters[i], l_Column.x, l_Segment.y + COLUMN_SIZE * i);
                         }
                     }
 
@@ -246,7 +244,7 @@ module Matrix {
         function render_bg() {
             ctx.save();
 
-            ctx.globalCompositeOperation = 'destination-over';
+            // ctx.globalCompositeOperation = 'copy';
 
             ctx.drawImage(bg.getBuffer(), 0, 0);
 
@@ -281,11 +279,11 @@ module Matrix {
 
                 // ctx.clearRect(0, 0, width, height);
 
+                // render_bg();
+
                 columnsAccumulator += delta;
 
                 render_columns(delta);
-
-                // render_bg();
 
                 colorAccumulator += delta;
 
@@ -299,8 +297,6 @@ module Matrix {
 
             paint_reset();
 
-            render_bg();
-
             let lastRender = 0;
             window.requestAnimationFrame(loop);
         }
@@ -308,14 +304,14 @@ module Matrix {
         function paint_reset(): void {
             ctx.clearRect(0, 0, width, height);
 
+            ctx.scale(1.2, 1.2);
+
             if (bg) bg.render();
         }
 
-        function paint_letter(x, y): void {
+        function paint_letter(charData: CharData, x: number, y: number): void {
             ctx.beginPath();
             ctx.clearRect(x, y, COLUMN_SIZE, COLUMN_SIZE);
-
-            let charData = characters[Math.floor(Math.random() * characters.length)];
 
             ctx.fillStyle = '#000';
             ctx.beginPath();
