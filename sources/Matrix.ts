@@ -204,6 +204,9 @@ module Matrix {
                     ctx.beginPath();
                     ctx.clearRect(l_Column.x, 0, COLUMN_SIZE, height);
 
+                    ctx.beginPath();
+                    ctx.drawImage(bg.getBuffer(), 0, 0, COLUMN_SIZE, height, l_Column.x, 0, COLUMN_SIZE, height);
+
                     let needsNext = true;
                     for (let l_Segment of l_Column.segments) {
                         if (l_Segment.delay > 0) {

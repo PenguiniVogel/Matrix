@@ -292,6 +292,8 @@ var Matrix;
                     var l_Column = columns_1[_i];
                     ctx.beginPath();
                     ctx.clearRect(l_Column.x, 0, Matrix.COLUMN_SIZE, height);
+                    ctx.beginPath();
+                    ctx.drawImage(bg.getBuffer(), 0, 0, Matrix.COLUMN_SIZE, height, l_Column.x, 0, Matrix.COLUMN_SIZE, height);
                     var needsNext = true;
                     for (var _a = 0, _b = l_Column.segments; _a < _b.length; _a++) {
                         var l_Segment = _b[_a];
