@@ -7,8 +7,6 @@
 
 # Ignore directories or files
 test
-APPEND.txt
+old
 
-# Don't ignore standalone distribute min.js (GitHub Pages)
-!src/distributions/standalone/build/build.sh
-!src/distributions/standalone/build/min.js
+# Don't Ignore these (specific)
