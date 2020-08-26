@@ -5,6 +5,14 @@ declare module Utility {
     function color_rgb(r: number, g: number, b: number): string;
     function color_rgba(r: number, g: number, b: number, a?: number): string;
     function debug_value(selector: string, value: string): void;
+    abstract class GraphicCanvas {
+        private readonly canvas;
+        readonly ctx: CanvasRenderingContext2D;
+        constructor(_canvas?: HTMLCanvasElement);
+        abstract render(): any;
+        resize(width: number, height: number): void;
+        getBuffer(): HTMLCanvasElement;
+    }
 }
 declare module MatrixFX {
     abstract class FX {

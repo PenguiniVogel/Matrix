@@ -1,10 +1,10 @@
 ///<reference path="sources/build/matrix.d.ts"/>
 
 Matrix.create('#matrix-canvas', {
-    color: '#000',
-    speed: 8,
+    color: '#44ff00',
+    speed: 16,
     updateRate: 16,
-    useFX: false
+    useFX: true
 });
 
 window.addEventListener('resize', () => Matrix.resize(window.innerWidth, window.innerHeight));

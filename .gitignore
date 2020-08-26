@@ -11,3 +11,4 @@ old
 
 # Don't Ignore these (specific)
 !sources/build/matrix.js
+!script.js

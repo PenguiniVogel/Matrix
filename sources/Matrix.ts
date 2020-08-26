@@ -165,21 +165,16 @@ module Matrix {
         let columns: Column[] = [];
 
         export function recalculate_columns(): void {
-            columns = [
-                {
-                    x: COLUMN_SIZE * 25,
-                    segments: [create_segment()]
-                }
-            ];
+            columns = [];
 
             paint_reset();
 
-            // for (let x = 0; x < width; x += COLUMN_SIZE) {
-            //     columns.push({
-            //         x: x,
-            //         segments: [create_segment()]
-            //     });
-            // }
+            for (let x = 0; x < width; x += COLUMN_SIZE) {
+                columns.push({
+                    x: x,
+                    segments: [create_segment()]
+                });
+            }
         }
 
         function create_segment(): ColumnSegment {
@@ -206,6 +201,8 @@ module Matrix {
 
             if (columnsAccumulator >= 1000.0 / speed) {
                 for (let l_Column of columns) {
+                    ctx.clearRect(l_Column.x, 0, COLUMN_SIZE, height);
+
                     let needsNext = true;
                     for (let l_Segment of l_Column.segments) {
                         if (l_Segment.delay > 0) {
@@ -221,7 +218,11 @@ module Matrix {
 
                             needsNext = false;
                         } else {
+                            ctx.beginPath();
                             ctx.clearRect(l_Column.x, l_Segment.y, COLUMN_SIZE, COLUMN_SIZE);
+
+                            ctx.beginPath();
+                            ctx.fillRect(l_Column.x + 5, l_Segment.y + 5, 2, 2);
 
                             l_Segment.y += COLUMN_SIZE;
                         }
@@ -242,6 +243,16 @@ module Matrix {
             }
         }
 
+        function render_bg() {
+            ctx.save();
+
+            ctx.globalCompositeOperation = 'destination-over';
+
+            ctx.drawImage(bg.getBuffer(), 0, 0);
+
+            ctx.restore();
+        }
+
         function render_color(delta: number) {
             ctx.save();
 
@@ -257,6 +268,7 @@ module Matrix {
                 ctx.drawImage(fxBuffer, 0, 0);
             } else {
                 ctx.fillStyle = color;
+                ctx.beginPath();
                 ctx.fillRect(0, 0, width, height);
             }
 
@@ -267,15 +279,17 @@ module Matrix {
             function loop(timestamp) {
                 let delta = timestamp - lastRender;
 
-                columnsAccumulator += delta;
+                // ctx.clearRect(0, 0, width, height);
 
-                ctx.drawImage(bg.buffer, 0, 0);
+                columnsAccumulator += delta;
 
                 render_columns(delta);
 
+                // render_bg();
+
                 colorAccumulator += delta;
 
-                // render_color(delta);
+                render_color(delta);
 
                 lastRender = timestamp;
                 window.requestAnimationFrame(loop);
@@ -285,6 +299,8 @@ module Matrix {
 
             paint_reset();
 
+            render_bg();
+
             let lastRender = 0;
             window.requestAnimationFrame(loop);
         }
@@ -292,39 +308,37 @@ module Matrix {
         function paint_reset(): void {
             ctx.clearRect(0, 0, width, height);
 
-            if (bg) bg.resize();
+            if (bg) bg.render();
         }
 
         function paint_letter(x, y): void {
+            ctx.beginPath();
             ctx.clearRect(x, y, COLUMN_SIZE, COLUMN_SIZE);
 
             let charData = characters[Math.floor(Math.random() * characters.length)];
 
             ctx.fillStyle = '#000';
+            ctx.beginPath();
             ctx.fillText(charData.char, x + 6 - (charData.width / 2.0), y + 1, COLUMN_SIZE);
         }
 
-        class BG {
-
-            public buffer: HTMLCanvasElement;
-            private ctx: CanvasRenderingContext2D;
+        class BG extends Utility.GraphicCanvas {
 
             constructor() {
-                this.buffer = document.createElement('canvas');
-                this.ctx = this.buffer.getContext('2d');
+                super();
             }
 
-            public resize() {
-                this.buffer.width = width;
-                this.buffer.height = height;
+            public render() {
+                this.resize(width, height);
 
                 this.ctx.clearRect(0, 0, width, height);
 
-                this.ctx.fillStyle = '#000';
+                this.ctx.fillStyle = '#000000';
 
                 for (let y = 0; y < height; y += COLUMN_SIZE) {
                     for (let x = 0; x < width; x += COLUMN_SIZE) {
-                        ctx.fillRect(x + 5, y + 5, 2, 2);
+                        this.ctx.beginPath();
+                        this.ctx.fillRect(x + 5, y + 5, 2, 2);
                     }
                 }
             }

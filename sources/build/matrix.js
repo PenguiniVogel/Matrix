@@ -45,6 +45,23 @@ var Utility;
             el.innerHTML = value;
     }
     Utility.debug_value = debug_value;
+    var GraphicCanvas = /** @class */ (function () {
+        function GraphicCanvas(_canvas) {
+            if (!_canvas)
+                _canvas = document.createElement('canvas');
+            this.canvas = _canvas;
+            this.ctx = this.canvas.getContext('2d');
+        }
+        GraphicCanvas.prototype.resize = function (width, height) {
+            this.canvas.width = width;
+            this.canvas.height = height;
+        };
+        GraphicCanvas.prototype.getBuffer = function () {
+            return this.canvas;
+        };
+        return GraphicCanvas;
+    }());
+    Utility.GraphicCanvas = GraphicCanvas;
 })(Utility || (Utility = {}));
 var MatrixFX;
 (function (MatrixFX) {
@@ -244,19 +261,14 @@ var Matrix;
     (function (RenderEngine) {
         var columns = [];
         function recalculate_columns() {
-            columns = [
-                {
-                    x: Matrix.COLUMN_SIZE * 25,
-                    segments: [create_segment()]
-                }
-            ];
+            columns = [];
             paint_reset();
-            // for (let x = 0; x < width; x += COLUMN_SIZE) {
-            //     columns.push({
-            //         x: x,
-            //         segments: [create_segment()]
-            //     });
-            // }
+            for (var x = 0; x < width; x += Matrix.COLUMN_SIZE) {
+                columns.push({
+                    x: x,
+                    segments: [create_segment()]
+                });
+            }
         }
         RenderEngine.recalculate_columns = recalculate_columns;
         function create_segment() {
@@ -278,6 +290,7 @@ var Matrix;
             if (columnsAccumulator >= 1000.0 / speed) {
                 for (var _i = 0, columns_1 = columns; _i < columns_1.length; _i++) {
                     var l_Column = columns_1[_i];
+                    ctx.clearRect(l_Column.x, 0, Matrix.COLUMN_SIZE, height);
                     var needsNext = true;
                     for (var _a = 0, _b = l_Column.segments; _a < _b.length; _a++) {
                         var l_Segment = _b[_a];
@@ -291,7 +304,10 @@ var Matrix;
                             needsNext = false;
                         }
                         else {
+                            ctx.beginPath();
                             ctx.clearRect(l_Column.x, l_Segment.y, Matrix.COLUMN_SIZE, Matrix.COLUMN_SIZE);
+                            ctx.beginPath();
+                            ctx.fillRect(l_Column.x + 5, l_Segment.y + 5, 2, 2);
                             l_Segment.y += Matrix.COLUMN_SIZE;
                         }
                         for (var i = 0; i < l_Segment.letters; i++) {
@@ -306,6 +322,12 @@ var Matrix;
                 columnsAccumulator = 0;
             }
         }
+        function render_bg() {
+            ctx.save();
+            ctx.globalCompositeOperation = 'destination-over';
+            ctx.drawImage(bg.getBuffer(), 0, 0);
+            ctx.restore();
+        }
         function render_color(delta) {
             ctx.save();
             ctx.globalCompositeOperation = 'source-atop';
@@ -318,6 +340,7 @@ var Matrix;
             }
             else {
                 ctx.fillStyle = color;
+                ctx.beginPath();
                 ctx.fillRect(0, 0, width, height);
             }
             ctx.restore();
@@ -325,17 +348,18 @@ var Matrix;
         function start() {
             function loop(timestamp) {
                 var delta = timestamp - lastRender;
+                // ctx.clearRect(0, 0, width, height);
                 columnsAccumulator += delta;
-                ctx.globalCompositeOperation = 'source-over';
-                ctx.drawImage(bg.buffer, 0, 0);
                 render_columns(delta);
+                // render_bg();
                 colorAccumulator += delta;
-                // render_color(delta);
+                render_color(delta);
                 lastRender = timestamp;
                 window.requestAnimationFrame(loop);
             }
             bg = new BG();
             paint_reset();
+            render_bg();
             var lastRender = 0;
             window.requestAnimationFrame(loop);
         }
@@ -343,31 +367,33 @@ var Matrix;
         function paint_reset() {
             ctx.clearRect(0, 0, width, height);
             if (bg)
-                bg.resize();
+                bg.render();
         }
         function paint_letter(x, y) {
+            ctx.beginPath();
             ctx.clearRect(x, y, Matrix.COLUMN_SIZE, Matrix.COLUMN_SIZE);
             var charData = characters[Math.floor(Math.random() * characters.length)];
             ctx.fillStyle = '#000';
+            ctx.beginPath();
             ctx.fillText(charData.char, x + 6 - (charData.width / 2.0), y + 1, Matrix.COLUMN_SIZE);
         }
-        var BG = /** @class */ (function () {
+        var BG = /** @class */ (function (_super) {
+            __extends(BG, _super);
             function BG() {
-                this.buffer = document.createElement('canvas');
-                this.ctx = this.buffer.getContext('2d');
+                return _super.call(this) || this;
             }
-            BG.prototype.resize = function () {
-                this.buffer.width = width;
-                this.buffer.height = height;
+            BG.prototype.render = function () {
+                this.resize(width, height);
                 this.ctx.clearRect(0, 0, width, height);
-                this.ctx.fillStyle = '#000';
+                this.ctx.fillStyle = '#000000';
                 for (var y = 0; y < height; y += Matrix.COLUMN_SIZE) {
                     for (var x = 0; x < width; x += Matrix.COLUMN_SIZE) {
-                        ctx.fillRect(x + 5, y + 5, 2, 2);
+                        this.ctx.beginPath();
+                        this.ctx.fillRect(x + 5, y + 5, 2, 2);
                     }
                 }
             };
             return BG;
-        }());
+        }(Utility.GraphicCanvas));
     })(RenderEngine || (RenderEngine = {}));
 })(Matrix || (Matrix = {}));
