@@ -13,21 +13,19 @@ module MonaLisaFX {
     let image: HTMLImageElement;
 
     export function load() {
+        Matrix.create('#matrix-canvas', {
+            speed: 8,
+            updateRate: 16,
+            useFX: false
+        });
+
+        Matrix.start();
+
         image = document.createElement('img');
 
         image.onload = (e?) => {
-            Matrix.create('#matrix-canvas', {
-                size: {
-                    width: window.innerWidth,
-                    height: window.innerHeight,
-                },
-                speed: 8,
-                updateRate: 16,
-                useFX: true,
-                fx: new MonaLisaFX.FX()
-            });
-
-            Matrix.start();
+            Matrix.Settings.setFX(new MonaLisaFX.FX());
+            Matrix.Settings.setUseFX(true);
         };
 
         image.src = 'mona_lisa.jpg';
@@ -41,7 +39,7 @@ module MonaLisaFX {
 
         public render(interval: number, width: number, height: number) {
             this.ctx.beginPath();
-            this.ctx.drawImage(image, width / 2.0 - image.width / 2.0, 0);
+            this.ctx.drawImage(image, 0, 0, width, height);
         }
 
     }
