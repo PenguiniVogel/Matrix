@@ -71,6 +71,14 @@ file that was distributed with this source code.
             font-size: 12px;
         }
 
+        #debug-canvas {
+            z-index: 2;
+            position: absolute;
+            top: 0;
+            right: 0;
+            left: 250px;
+        }
+
         #matrix-canvas {
             z-index: 1;
             position: absolute;
@@ -87,8 +95,8 @@ file that was distributed with this source code.
 
     <canvas id="matrix-canvas"></canvas>
 
-    <div id="options" style="display: grid;">
-    </div>
+    <div id="options" style="display: grid;"></div>
+    <canvas id="debug-canvas"></canvas>
 
     <script src="sources/build/matrix.min.js"></script>
     <script src="script.min.js"></script>

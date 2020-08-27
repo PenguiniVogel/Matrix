@@ -195,6 +195,7 @@ module Matrix {
             fx = _fx;
 
             fx.fx_buffer(width, height);
+            fx.fx_render(0, width, height);
         }
 
         export function getFX(): MatrixFX.FX {
@@ -265,8 +266,6 @@ module Matrix {
         let colorAccumulator = 0;
 
         let bg: BG;
-
-        let fxBuffer: HTMLCanvasElement;
 
         function render_columns(/* delta: number */) {
             if (columnsAccumulator >= 1000.0 / speed) {
@@ -361,13 +360,13 @@ module Matrix {
             ctx.globalCompositeOperation = 'source-atop';
 
             if (useFX) {
-                if (!fxBuffer || colorAccumulator >= 1000.0 / ups) {
-                    fxBuffer = fx.fx_render(delta, width, height);
+                if (colorAccumulator >= 1000.0 / ups) {
+                    fx.fx_render(delta, width, height);
 
                     colorAccumulator = 0;
                 }
 
-                ctx.drawImage(fxBuffer, 0, 0);
+                fx.fx_draw(ctx, width, height);
             } else {
                 ctx.fillStyle = color;
                 ctx.beginPath();

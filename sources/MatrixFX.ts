@@ -9,8 +9,8 @@ module MatrixFX {
 
     export abstract class FX {
 
-        public buffer: HTMLCanvasElement;
-        public ctx: CanvasRenderingContext2D;
+        protected buffer: HTMLCanvasElement;
+        protected ctx: CanvasRenderingContext2D;
 
         constructor() {
             this.buffer = document.createElement('canvas');
@@ -31,6 +31,10 @@ module MatrixFX {
             return this.buffer;
         }
 
+        public fx_draw(_ctx: CanvasRenderingContext2D, width: number, height: number): void {
+            _ctx.drawImage(this.buffer, 0, 0);
+        }
+
         public abstract render(interval: number, width: number, height: number): void;
 
     }
@@ -39,19 +43,31 @@ module MatrixFX {
 
         private hueOffset = 0;
 
-        public render(interval: number, width: number, height: number): void {
-            let colHue = 360.0 / (width / Matrix.COLUMN_SIZE);
+        private colCount = 0;
+        private colHue = 0;
 
-            for (let x = 0; x < width; x += Matrix.COLUMN_SIZE) {
+        public fx_buffer(width: number, height: number) {
+            this.colCount = width / Matrix.COLUMN_SIZE;
+
+            this.colHue = 360.0 / this.colCount;
+
+            super.fx_buffer(this.colCount, 1);
+        }
+
+        public fx_draw(_ctx: CanvasRenderingContext2D, width: number, height: number) {
+            _ctx.drawImage(this.buffer, 0, 0, width, height);
+        }
+
+        public render(interval: number, width: number, height: number): void {
+            for (let x = 0; x < this.colCount; x ++) {
                 this.ctx.fillStyle = Utility.color_hsl(
-                    Utility.fixDegrees(this.hueOffset -
-                        colHue * (x / Matrix.COLUMN_SIZE))
+                    Utility.fixDegrees(this.hueOffset - this.colHue * x)
                 );
 
-                this.ctx.fillRect(x, 0, Matrix.COLUMN_SIZE, height);
+                this.ctx.fillRect(x, 0, 1, 1);
             }
 
-            this.hueOffset = Utility.fixDegrees(this.hueOffset + colHue);
+            this.hueOffset = Utility.fixDegrees(this.hueOffset + this.colHue);
         }
 
     }
@@ -60,22 +76,46 @@ module MatrixFX {
 
         private hueOffset = 0;
 
-        public render(interval: number, width: number, height: number): void {
-            let colHue = 360.0 / (width / Matrix.COLUMN_SIZE);
-            let rowHue = 360.0 / (height / Matrix.COLUMN_SIZE);
+        private colCount = 0;
+        private colHue = 0;
 
-            for (let y = 0; y < height; y += Matrix.COLUMN_SIZE) {
-                for (let x = 0; x < width; x += Matrix.COLUMN_SIZE) {
-                    this.ctx.fillStyle = Utility.color_hsl(
-                        Utility.fixDegrees(this.hueOffset -
-                            colHue * (x / Matrix.COLUMN_SIZE) -
-                            rowHue * (y / Matrix.COLUMN_SIZE))
-                    );
-                    this.ctx.fillRect(x, y, Matrix.COLUMN_SIZE, Matrix.COLUMN_SIZE);
+        private rowCount = 0;
+        private rowHue = 0;
+
+        public fx_buffer(width: number, height: number) {
+            this.colCount = width / Matrix.COLUMN_SIZE;
+            this.rowCount = height / Matrix.COLUMN_SIZE;
+
+            this.colHue = 360.0 / this.colCount;
+            this.rowHue = 360.0 / this.rowCount;
+
+            super.fx_buffer(this.colCount, this.rowCount);
+        }
+
+        public fx_draw(_ctx: CanvasRenderingContext2D, width: number, height: number) {
+            _ctx.drawImage(this.buffer, 0, 0, width, height);
+        }
+
+        public render(interval: number, width: number, height: number): void {
+            console.time('FX : Column');
+            for (let x = 0, y = 0; x < this.colCount;) {
+                // this.ctx.fillStyle = Utility.color_hsl(
+                //     Utility.fixDegrees(this.hueOffset - this.colHue * x - this.rowHue * y)
+                // );
+
+                this.ctx.fillRect(x, y, 1, 1);
+
+                y ++;
+
+                if (y >= this.rowCount) {
+                    y = 0;
+
+                    x ++;
                 }
             }
+            console.timeEnd('FX : Column');
 
-            this.hueOffset = Utility.fixDegrees(this.hueOffset + rowHue);
+            this.hueOffset = Utility.fixDegrees(this.hueOffset + this.rowHue);
         }
 
     }

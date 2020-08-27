@@ -36,19 +36,30 @@ declare module Utility {
  */
 declare module MatrixFX {
     abstract class FX {
-        buffer: HTMLCanvasElement;
-        ctx: CanvasRenderingContext2D;
+        protected buffer: HTMLCanvasElement;
+        protected ctx: CanvasRenderingContext2D;
         constructor();
         fx_buffer(width: number, height: number): void;
         fx_render(interval: number, width: number, height: number): HTMLCanvasElement;
+        fx_draw(_ctx: CanvasRenderingContext2D, width: number, height: number): void;
         abstract render(interval: number, width: number, height: number): void;
     }
     class BasicColumnFX extends FX {
         private hueOffset;
+        private colCount;
+        private colHue;
+        fx_buffer(width: number, height: number): void;
+        fx_draw(_ctx: CanvasRenderingContext2D, width: number, height: number): void;
         render(interval: number, width: number, height: number): void;
     }
     class BasicLetterFX extends FX {
         private hueOffset;
+        private colCount;
+        private colHue;
+        private rowCount;
+        private rowHue;
+        fx_buffer(width: number, height: number): void;
+        fx_draw(_ctx: CanvasRenderingContext2D, width: number, height: number): void;
         render(interval: number, width: number, height: number): void;
     }
 }
