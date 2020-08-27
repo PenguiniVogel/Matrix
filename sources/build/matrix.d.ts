@@ -1,19 +1,39 @@
+/**
+ Copyright (c) 2020 Felix Vogel
+ https://github.com/FelixVogel/Matrix
+
+ For the full copyright and license information, please view the LICENSE
+ file that was distributed with this source code.
+ */
 declare module Utility {
-    function fixDegrees(deg: number): number;
-    function color_hsl(h: number, s?: number, l?: number): string;
-    function color_hsla(h: number, s?: number, l?: number, a?: number): string;
-    function color_rgb(r: number, g: number, b: number): string;
-    function color_rgba(r: number, g: number, b: number, a?: number): string;
-    function debug_value(selector: string, value: string): void;
-    abstract class GraphicCanvas {
+    export function fixDegrees(deg: number): number;
+    export function getUID(prefix?: string, segmentCount?: number, segmentLength?: number): string;
+    export function color_hsl(h: number, s?: number, l?: number): string;
+    export function color_hsla(h: number, s?: number, l?: number, a?: number): string;
+    export function color_rgb(r: number, g: number, b: number): string;
+    export function color_rgba(r: number, g: number, b: number, a?: number): string;
+    interface DebugHandle {
+        id: string;
+    }
+    export function debug_create(parentSelector: string): DebugHandle;
+    export function debug_value(handle: DebugHandle, value: string): void;
+    export abstract class GraphicCanvas {
         private readonly canvas;
         readonly ctx: CanvasRenderingContext2D;
-        constructor(_canvas?: HTMLCanvasElement);
-        abstract render(): any;
+        protected constructor(_canvas?: HTMLCanvasElement);
+        abstract render(): void;
         resize(width: number, height: number): void;
         getBuffer(): HTMLCanvasElement;
     }
+    export {};
 }
+/**
+ Copyright (c) 2020 Felix Vogel
+ https://github.com/FelixVogel/Matrix
+
+ For the full copyright and license information, please view the LICENSE
+ file that was distributed with this source code.
+ */
 declare module MatrixFX {
     abstract class FX {
         buffer: HTMLCanvasElement;
@@ -32,6 +52,13 @@ declare module MatrixFX {
         render(interval: number, width: number, height: number): void;
     }
 }
+/**
+ Copyright (c) 2020 Felix Vogel
+ https://github.com/FelixVogel/Matrix
+
+ For the full copyright and license information, please view the LICENSE
+ file that was distributed with this source code.
+ */
 declare module Matrix {
     const DEFAULT_SIZE = 300;
     const DEFAULT_COLOR = "#44ff00";
@@ -41,6 +68,7 @@ declare module Matrix {
     const DEFAULT_ROTATION = 0;
     const DEFAULT_UPDATE_RATE = 32;
     const DEFAULT_FX: MatrixFX.BasicColumnFX;
+    const DEFAULT_MUTATION_CHANCE = 0.1;
     const COLUMN_SIZE = 12;
     const MAX_SPEED = 32;
     const MAX_LINE_LENGTH = 32;
@@ -57,6 +85,7 @@ declare module Matrix {
         updateRate?: number;
         useFX?: boolean;
         fx?: MatrixFX.FX;
+        mutationChance?: number;
     }
     function create(selector: string, settings?: OptionalSettings): void;
     function start(): void;
@@ -69,4 +98,5 @@ declare module Matrix {
     function setUpdateRate(_ups?: number): void;
     function setUseFX(_useFX?: boolean): void;
     function setFX(_fx?: MatrixFX.FX): void;
+    function setMutationChance(_chance?: number): void;
 }

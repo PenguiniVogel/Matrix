@@ -26,8 +26,8 @@ that the following conditions are met:
 
 APPENDIX
 
-https://github.com/FelixVogel/Matrix
 Copyright (c) 2020 Felix Vogel
+https://github.com/FelixVogel/Matrix
 
 For the full copyright and license information, please view the LICENSE
 file that was distributed with this source code.

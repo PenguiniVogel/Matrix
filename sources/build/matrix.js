@@ -11,12 +11,39 @@ var __extends = (this && this.__extends) || (function () {
         d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
     };
 })();
+/**
+ Copyright (c) 2020 Felix Vogel
+ https://github.com/FelixVogel/Matrix
+
+ For the full copyright and license information, please view the LICENSE
+ file that was distributed with this source code.
+ */
 var Utility;
 (function (Utility) {
+    // --- Math
     function fixDegrees(deg) {
         return deg - (Math.floor(deg / 360.0) * 360.0);
     }
     Utility.fixDegrees = fixDegrees;
+    // --- UID
+    var UID_CHARSET = 'abcdefghijklmnopqrstuvwxyz0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+    function getUID(prefix, segmentCount, segmentLength) {
+        if (prefix === void 0) { prefix = 'uid'; }
+        if (segmentCount === void 0) { segmentCount = 4; }
+        if (segmentLength === void 0) { segmentLength = 4; }
+        if (prefix.length < 1 || segmentCount < 1 || segmentLength < 1)
+            throw new Error('The specified arguments are not valid');
+        var result = "" + prefix;
+        for (var u = 0; u < segmentCount; u++) {
+            result += '-';
+            for (var i = 0; i < segmentLength; i++) {
+                result += "" + UID_CHARSET[Math.floor(Math.random() * UID_CHARSET.length)];
+            }
+        }
+        return result;
+    }
+    Utility.getUID = getUID;
+    // --- Color
     function color_hsl(h, s, l) {
         if (s === void 0) { s = 100; }
         if (l === void 0) { l = 50; }
@@ -39,12 +66,27 @@ var Utility;
         return "rgba(" + r + ", " + g + ", " + b + ", " + a + ")";
     }
     Utility.color_rgba = color_rgba;
-    function debug_value(selector, value) {
+    function debug_create(parentSelector) {
         var el;
-        if ((el = document.querySelector(selector)))
+        if ((el = document.querySelector(parentSelector))) {
+            var id = getUID('debug');
+            var span = document.createElement('span');
+            span.id = id;
+            el.appendChild(span);
+            return {
+                id: id
+            };
+        }
+        return null;
+    }
+    Utility.debug_create = debug_create;
+    function debug_value(handle, value) {
+        var el;
+        if (handle && handle.id && (el = document.querySelector(handle.id)))
             el.innerHTML = value;
     }
     Utility.debug_value = debug_value;
+    // --- Graphics
     var GraphicCanvas = /** @class */ (function () {
         function GraphicCanvas(_canvas) {
             if (!_canvas)
@@ -63,6 +105,13 @@ var Utility;
     }());
     Utility.GraphicCanvas = GraphicCanvas;
 })(Utility || (Utility = {}));
+/**
+ Copyright (c) 2020 Felix Vogel
+ https://github.com/FelixVogel/Matrix
+
+ For the full copyright and license information, please view the LICENSE
+ file that was distributed with this source code.
+ */
 var MatrixFX;
 (function (MatrixFX) {
     var FX = /** @class */ (function () {
@@ -125,6 +174,13 @@ var MatrixFX;
     }(FX));
     MatrixFX.BasicLetterFX = BasicLetterFX;
 })(MatrixFX || (MatrixFX = {}));
+/**
+ Copyright (c) 2020 Felix Vogel
+ https://github.com/FelixVogel/Matrix
+
+ For the full copyright and license information, please view the LICENSE
+ file that was distributed with this source code.
+ */
 var Matrix;
 (function (Matrix) {
     Matrix.DEFAULT_SIZE = 300;
@@ -135,6 +191,7 @@ var Matrix;
     Matrix.DEFAULT_ROTATION = 0;
     Matrix.DEFAULT_UPDATE_RATE = 32;
     Matrix.DEFAULT_FX = new MatrixFX.BasicColumnFX();
+    Matrix.DEFAULT_MUTATION_CHANCE = 0.1;
     Matrix.COLUMN_SIZE = 12;
     Matrix.MAX_SPEED = 32;
     Matrix.MAX_LINE_LENGTH = 32;
@@ -144,18 +201,18 @@ var Matrix;
     var canvas;
     var ctx;
     var color = Matrix.DEFAULT_COLOR;
-    var characters = [];
+    var characters;
+    var characterSizes;
     function convertSymbols(_symbols) {
         if (_symbols === void 0) { _symbols = Matrix.DEFAULT_SYMBOLS; }
-        characters = [];
-        for (var i = 0, l = _symbols.length; i < l; i++) {
-            var c = _symbols[i];
-            var measure = ctx.measureText(c);
-            characters.push({
-                width: measure.width,
-                char: c
-            });
+        characters = _symbols;
+        characterSizes = [];
+        for (var i = 0, l = characters.length; i < l; i++) {
+            characterSizes[i] = ctx.measureText(characters[i]).width / 2.0;
         }
+    }
+    function random_char() {
+        return Math.floor(Math.random() * characters.length);
     }
     var speed = Matrix.DEFAULT_SPEED;
     var lineLength = Matrix.DEFAULT_LINE_LENGTH;
@@ -163,6 +220,7 @@ var Matrix;
     var ups = Matrix.DEFAULT_UPDATE_RATE;
     var useFX = false;
     var fx = Matrix.DEFAULT_FX;
+    var mutationChance = Matrix.DEFAULT_MUTATION_CHANCE;
     function create(selector, settings) {
         var _canvas = document.querySelector(selector);
         if (_canvas.tagName.toLowerCase() != 'canvas')
@@ -191,6 +249,8 @@ var Matrix;
                 setUseFX(settings.useFX);
             if (settings.fx && settings.fx.render)
                 setFX(settings.fx);
+            if (settings.mutationChance)
+                setMutationChance(settings.mutationChance);
         }
     }
     Matrix.create = create;
@@ -256,6 +316,11 @@ var Matrix;
         fx = _fx;
     }
     Matrix.setFX = setFX;
+    function setMutationChance(_chance) {
+        if (_chance === void 0) { _chance = Matrix.DEFAULT_MUTATION_CHANCE; }
+        mutationChance = _chance;
+    }
+    Matrix.setMutationChance = setMutationChance;
     // Rendering
     var RenderEngine;
     (function (RenderEngine) {
@@ -284,38 +349,58 @@ var Matrix;
         var colorAccumulator = 0;
         var bg;
         var fxBuffer;
-        function render_columns(delta) {
-            Utility.debug_value('#debug-columns', "" + columns.length);
-            Utility.debug_value('#debug-column-0', "" + columns[0].segments[columns[0].segments.length - 1].delay);
+        function render_columns( /* delta: number */) {
             if (columnsAccumulator >= 1000.0 / speed) {
+                ctx.beginPath();
+                ctx.clearRect(0, 0, width, height);
+                render_bg();
                 for (var _i = 0, columns_1 = columns; _i < columns_1.length; _i++) {
                     var l_Column = columns_1[_i];
-                    ctx.beginPath();
-                    ctx.clearRect(l_Column.x, 0, Matrix.COLUMN_SIZE, height);
-                    ctx.beginPath();
-                    ctx.drawImage(bg.getBuffer(), 0, 0, Matrix.COLUMN_SIZE, height, l_Column.x, 0, Matrix.COLUMN_SIZE, height);
+                    // ctx.beginPath();
+                    // ctx.clearRect(l_Column.x, 0, COLUMN_SIZE, height);
+                    //
+                    // ctx.beginPath();
+                    // ctx.drawImage(bg.getBuffer(), 0, 0, COLUMN_SIZE, height, l_Column.x, 0, COLUMN_SIZE, height);
+                    // randomly determine regarding speed whether a column should be moved.
+                    var move = Math.random() < 0.51;
                     var needsNext = true;
                     for (var _a = 0, _b = l_Column.segments; _a < _b.length; _a++) {
                         var l_Segment = _b[_a];
                         if (l_Segment.delay > 0) {
-                            l_Segment.delay -= 1;
                             needsNext = false;
+                            if (!move)
+                                continue;
+                            l_Segment.delay -= 1;
                             continue;
                         }
-                        if (l_Segment.letters.length < l_Segment.length) {
-                            l_Segment.letters.push(characters[Math.floor(Math.random() * characters.length)]);
-                            needsNext = false;
-                        }
-                        else {
-                            ctx.beginPath();
-                            ctx.clearRect(l_Column.x, l_Segment.y, Matrix.COLUMN_SIZE, Matrix.COLUMN_SIZE);
-                            l_Segment.y += Matrix.COLUMN_SIZE;
+                        // ensure max one letter gets changed
+                        var changedLetter = true;
+                        if (move) {
+                            changedLetter = false;
+                            if (l_Segment.letters.length < l_Segment.length) {
+                                l_Segment.letters.push(random_char());
+                                needsNext = false;
+                            }
+                            else {
+                                ctx.beginPath();
+                                ctx.clearRect(l_Column.x, l_Segment.y, Matrix.COLUMN_SIZE, Matrix.COLUMN_SIZE);
+                                l_Segment.y += Matrix.COLUMN_SIZE;
+                            }
                         }
                         for (var i = 0, l = l_Segment.letters.length; i < l; i++) {
-                            paint_letter(l_Segment.letters[i], l_Column.x, l_Segment.y + Matrix.COLUMN_SIZE * i);
+                            var letter = l_Segment.letters[i];
+                            // chance that letter gets changed
+                            if (!changedLetter && Math.random() < mutationChance) {
+                                changedLetter = true;
+                                letter = random_char();
+                                l_Segment.letters[i] = letter;
+                                paint_letter_mutation(l_Column.x, l_Segment.y + Matrix.COLUMN_SIZE * i);
+                                continue;
+                            }
+                            paint_letter(letter, l_Column.x, l_Segment.y + Matrix.COLUMN_SIZE * i);
                         }
                     }
-                    if (needsNext) {
+                    if (move && needsNext) {
                         l_Column.segments.push(create_segment());
                     }
                     l_Column.segments = l_Column.segments.filter(function (segment) { return segment.y - (Matrix.COLUMN_SIZE * segment.length) < height; });
@@ -326,6 +411,7 @@ var Matrix;
         function render_bg() {
             ctx.save();
             // ctx.globalCompositeOperation = 'copy';
+            ctx.globalAlpha = 0.3;
             ctx.drawImage(bg.getBuffer(), 0, 0);
             ctx.restore();
         }
@@ -352,7 +438,7 @@ var Matrix;
                 // ctx.clearRect(0, 0, width, height);
                 // render_bg();
                 columnsAccumulator += delta;
-                render_columns(delta);
+                render_columns( /* delta */);
                 colorAccumulator += delta;
                 render_color(delta);
                 lastRender = timestamp;
@@ -370,12 +456,22 @@ var Matrix;
             if (bg)
                 bg.render();
         }
-        function paint_letter(charData, x, y) {
+        function paint_letter(char, x, y) {
             ctx.beginPath();
             ctx.clearRect(x, y, Matrix.COLUMN_SIZE, Matrix.COLUMN_SIZE);
             ctx.fillStyle = '#000';
             ctx.beginPath();
-            ctx.fillText(charData.char, x + 6 - (charData.width / 2.0), y + 1, Matrix.COLUMN_SIZE);
+            ctx.fillText(characters[char], x + 6 - characterSizes[char], y + 2, Matrix.COLUMN_SIZE);
+        }
+        function paint_letter_mutation(x, y) {
+            ctx.beginPath();
+            ctx.clearRect(x, y, Matrix.COLUMN_SIZE, Matrix.COLUMN_SIZE);
+            ctx.save();
+            ctx.globalAlpha = 0.3;
+            ctx.fillStyle = '#000';
+            ctx.beginPath();
+            ctx.fillRect(x + 3, y + 1, Matrix.COLUMN_SIZE - 6, Matrix.COLUMN_SIZE - 2);
+            ctx.restore();
         }
         var BG = /** @class */ (function (_super) {
             __extends(BG, _super);

@@ -1,3 +1,10 @@
+/**
+ Copyright (c) 2020 Felix Vogel
+ https://github.com/FelixVogel/Matrix
+
+ For the full copyright and license information, please view the LICENSE
+ file that was distributed with this source code.
+ */
 module Matrix {
 
     export const DEFAULT_SIZE = 300;
@@ -8,6 +15,7 @@ module Matrix {
     export const DEFAULT_ROTATION = 0;
     export const DEFAULT_UPDATE_RATE = 32;
     export const DEFAULT_FX = new MatrixFX.BasicColumnFX();
+    export const DEFAULT_MUTATION_CHANCE = 0.1;
 
     export const COLUMN_SIZE = 12;
     export const MAX_SPEED = 32;
@@ -23,24 +31,20 @@ module Matrix {
 
     let color: string = DEFAULT_COLOR;
 
-    interface CharData {
-        width: number,
-        char: string
-    }
-
-    let characters: CharData[] = [];
+    let characters: string;
+    let characterSizes: number[];
 
     function convertSymbols(_symbols: string = DEFAULT_SYMBOLS): void {
-        characters = [];
+        characters = _symbols;
+        characterSizes = [];
 
-        for (let i = 0, l = _symbols.length; i < l; i ++) {
-            let c = _symbols[i];
-            let measure = ctx.measureText(c);
-            characters.push({
-                width: measure.width,
-                char: c
-            });
+        for (let i = 0, l = characters.length; i < l; i ++) {
+            characterSizes[i] = ctx.measureText(characters[i]).width / 2.0;
         }
+    }
+
+    function random_char(): number {
+        return Math.floor(Math.random() * characters.length);
     }
 
     let speed: number = DEFAULT_SPEED;
@@ -49,6 +53,7 @@ module Matrix {
     let ups: number = DEFAULT_UPDATE_RATE;
     let useFX: boolean = false;
     let fx: MatrixFX.FX = DEFAULT_FX;
+    let mutationChance: number = DEFAULT_MUTATION_CHANCE;
 
     // --- Creation
 
@@ -61,7 +66,8 @@ module Matrix {
         rotation?: number,
         updateRate?: number,
         useFX?: boolean,
-        fx?: MatrixFX.FX
+        fx?: MatrixFX.FX,
+        mutationChance?: number
     }
 
     export function create(selector: string, settings?: OptionalSettings): void {
@@ -87,6 +93,7 @@ module Matrix {
             if (settings.updateRate) setUpdateRate(settings.updateRate);
             if (settings.useFX != null) setUseFX(settings.useFX);
             if (settings.fx && settings.fx.render) setFX(settings.fx);
+            if (settings.mutationChance) setMutationChance(settings.mutationChance);
         }
     }
 
@@ -146,6 +153,10 @@ module Matrix {
         fx = _fx;
     }
 
+    export function setMutationChance(_chance: number = DEFAULT_MUTATION_CHANCE) {
+        mutationChance = _chance;
+    }
+
     // Rendering
 
     module RenderEngine {
@@ -158,7 +169,7 @@ module Matrix {
         interface ColumnSegment {
             delay: number,
             y: number,
-            letters: CharData[],
+            letters: number[],
             length: number,
         }
 
@@ -195,45 +206,72 @@ module Matrix {
 
         let fxBuffer: HTMLCanvasElement;
 
-        function render_columns(delta: number) {
-            Utility.debug_value('#debug-columns', `${columns.length}`);
-            Utility.debug_value('#debug-column-0', `${columns[0].segments[columns[0].segments.length - 1].delay}`);
-
+        function render_columns(/* delta: number */) {
             if (columnsAccumulator >= 1000.0 / speed) {
-                for (let l_Column of columns) {
-                    ctx.beginPath();
-                    ctx.clearRect(l_Column.x, 0, COLUMN_SIZE, height);
+                ctx.beginPath();
+                ctx.clearRect(0, 0, width, height);
 
-                    ctx.beginPath();
-                    ctx.drawImage(bg.getBuffer(), 0, 0, COLUMN_SIZE, height, l_Column.x, 0, COLUMN_SIZE, height);
+                render_bg();
+
+                for (let l_Column of columns) {
+                    // ctx.beginPath();
+                    // ctx.clearRect(l_Column.x, 0, COLUMN_SIZE, height);
+                    //
+                    // ctx.beginPath();
+                    // ctx.drawImage(bg.getBuffer(), 0, 0, COLUMN_SIZE, height, l_Column.x, 0, COLUMN_SIZE, height);
+
+                    // randomly determine regarding speed whether a column should be moved.
+                    let move: boolean = Math.random() < 0.51;
 
                     let needsNext = true;
                     for (let l_Segment of l_Column.segments) {
                         if (l_Segment.delay > 0) {
-                            l_Segment.delay -= 1;
-
                             needsNext = false;
+
+                            if (!move) continue;
+
+                            l_Segment.delay -= 1;
 
                             continue;
                         }
 
-                        if (l_Segment.letters.length < l_Segment.length) {
-                            l_Segment.letters.push(characters[Math.floor(Math.random() * characters.length)]);
+                        // ensure max one letter gets changed
+                        let changedLetter: boolean = true;
 
-                            needsNext = false;
-                        } else {
-                            ctx.beginPath();
-                            ctx.clearRect(l_Column.x, l_Segment.y, COLUMN_SIZE, COLUMN_SIZE);
+                        if (move) {
+                            changedLetter = false;
 
-                            l_Segment.y += COLUMN_SIZE;
+                            if (l_Segment.letters.length < l_Segment.length) {
+                                l_Segment.letters.push(random_char());
+
+                                needsNext = false;
+                            } else {
+                                ctx.beginPath();
+                                ctx.clearRect(l_Column.x, l_Segment.y, COLUMN_SIZE, COLUMN_SIZE);
+
+                                l_Segment.y += COLUMN_SIZE;
+                            }
                         }
 
                         for (let i = 0, l = l_Segment.letters.length; i < l; i ++) {
-                            paint_letter(l_Segment.letters[i], l_Column.x, l_Segment.y + COLUMN_SIZE * i);
+                            let letter = l_Segment.letters[i];
+                            // chance that letter gets changed
+                            if (!changedLetter && Math.random() < mutationChance) {
+                                changedLetter = true;
+
+                                letter = random_char();
+                                l_Segment.letters[i] = letter;
+
+                                paint_letter_mutation(l_Column.x, l_Segment.y + COLUMN_SIZE * i);
+
+                                continue;
+                            }
+
+                            paint_letter(letter, l_Column.x, l_Segment.y + COLUMN_SIZE * i);
                         }
                     }
 
-                    if (needsNext) {
+                    if (move && needsNext) {
                         l_Column.segments.push(create_segment());
                     }
 
@@ -248,6 +286,7 @@ module Matrix {
             ctx.save();
 
             // ctx.globalCompositeOperation = 'copy';
+            ctx.globalAlpha = 0.3;
 
             ctx.drawImage(bg.getBuffer(), 0, 0);
 
@@ -286,7 +325,7 @@ module Matrix {
 
                 columnsAccumulator += delta;
 
-                render_columns(delta);
+                render_columns(/* delta */);
 
                 colorAccumulator += delta;
 
@@ -312,13 +351,27 @@ module Matrix {
             if (bg) bg.render();
         }
 
-        function paint_letter(charData: CharData, x: number, y: number): void {
+        function paint_letter(char: number, x: number, y: number): void {
             ctx.beginPath();
             ctx.clearRect(x, y, COLUMN_SIZE, COLUMN_SIZE);
 
             ctx.fillStyle = '#000';
             ctx.beginPath();
-            ctx.fillText(charData.char, x + 6 - (charData.width / 2.0), y + 1, COLUMN_SIZE);
+            ctx.fillText(characters[char], x + 6 - characterSizes[char], y + 2, COLUMN_SIZE);
+        }
+
+        function paint_letter_mutation(x: number, y: number) {
+            ctx.beginPath();
+            ctx.clearRect(x, y, COLUMN_SIZE, COLUMN_SIZE);
+
+            ctx.save();
+
+            ctx.globalAlpha = 0.3;
+            ctx.fillStyle = '#000';
+            ctx.beginPath();
+            ctx.fillRect(x + 3, y + 1, COLUMN_SIZE - 6, COLUMN_SIZE - 2);
+
+            ctx.restore();
         }
 
         class BG extends Utility.GraphicCanvas {
