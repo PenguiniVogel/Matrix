@@ -15,6 +15,7 @@ module Matrix {
     export const DEFAULT_ROTATION = 0;
     export const DEFAULT_UPDATE_RATE = 32;
     export const DEFAULT_FX = new MatrixFX.BasicColumnFX();
+    export const DEFAULT_MOVE_CHANCE = 0.51;
     export const DEFAULT_MUTATION_CHANCE = 0.1;
 
     export const COLUMN_SIZE = 12;
@@ -22,6 +23,8 @@ module Matrix {
     export const MAX_LINE_LENGTH = 32;
 
     // --- Internal Settings
+
+    let created = false;
 
     let width: number = DEFAULT_SIZE;
     let height: number = DEFAULT_SIZE;
@@ -53,6 +56,7 @@ module Matrix {
     let ups: number = DEFAULT_UPDATE_RATE;
     let useFX: boolean = false;
     let fx: MatrixFX.FX = DEFAULT_FX;
+    let moveChance: number = DEFAULT_MOVE_CHANCE;
     let mutationChance: number = DEFAULT_MUTATION_CHANCE;
 
     // --- Creation
@@ -67,6 +71,7 @@ module Matrix {
         updateRate?: number,
         useFX?: boolean,
         fx?: MatrixFX.FX,
+        moveChance?: number,
         mutationChance?: number
     }
 
@@ -74,6 +79,8 @@ module Matrix {
         let _canvas: HTMLCanvasElement = document.querySelector(selector);
 
         if (_canvas.tagName.toLowerCase() != 'canvas') return;
+
+        created = true;
 
         canvas = _canvas;
         ctx = _canvas.getContext('2d');
@@ -85,15 +92,16 @@ module Matrix {
 
         if (settings) {
             if (settings.size) resize(settings.size.width, settings.size.height);
-            if (settings.color) setColor(settings.color);
-            if (settings.symbols) setSymbols(settings.symbols);
-            if (settings.speed) setSpeed(settings.speed);
-            if (settings.lineLength) setLineLength(settings.lineLength);
-            if (settings.rotation) setRotation(settings.rotation);
-            if (settings.updateRate) setUpdateRate(settings.updateRate);
-            if (settings.useFX != null) setUseFX(settings.useFX);
-            if (settings.fx && settings.fx.render) setFX(settings.fx);
-            if (settings.mutationChance) setMutationChance(settings.mutationChance);
+            if (settings.color) Settings.setColor(settings.color);
+            if (settings.symbols) Settings.setSymbols(settings.symbols);
+            if (settings.speed) Settings.setSpeed(settings.speed);
+            if (settings.lineLength) Settings.setLineLength(settings.lineLength);
+            if (settings.rotation) Settings.setRotation(settings.rotation);
+            if (settings.updateRate) Settings.setUpdateRate(settings.updateRate);
+            if (settings.useFX != null) Settings.setUseFX(settings.useFX);
+            if (settings.fx && settings.fx.render) Settings.setFX(settings.fx);
+            if (settings.moveChance) Settings.setMoveChance(settings.moveChance);
+            if (settings.mutationChance) Settings.setMutationChance(settings.mutationChance);
         }
     }
 
@@ -103,7 +111,9 @@ module Matrix {
 
     // --- Settings
 
-    export function resize(_width: number = DEFAULT_SIZE, _height: number = DEFAULT_SIZE) {
+    export function resize(_width: number = DEFAULT_SIZE, _height: number = DEFAULT_SIZE): void {
+        if (!created) return;
+
         width = _width;
         height = _height;
 
@@ -115,46 +125,98 @@ module Matrix {
         RenderEngine.recalculate_columns();
     }
 
-    export function setColor(_color: string = DEFAULT_COLOR): void {
-        color = _color;
-    }
+    export module Settings {
 
-    export function setSymbols(_symbols: string = DEFAULT_SYMBOLS): void {
-        convertSymbols(_symbols);
-    }
+        export function setColor(_color: string = DEFAULT_COLOR): void {
+            color = _color;
+        }
 
-    export function setSpeed(_speed: number = DEFAULT_SPEED): void {
-        if (_speed < 1 || _speed > MAX_SPEED) _speed = DEFAULT_SPEED;
+        export function getColor(): string {
+            return color;
+        }
 
-        speed = _speed;
-    }
+        export function setSymbols(_symbols: string = DEFAULT_SYMBOLS): void {
+            convertSymbols(_symbols);
 
-    export function setLineLength(_lineLength: number = DEFAULT_LINE_LENGTH): void {
-        if (_lineLength < 1 || _lineLength > MAX_LINE_LENGTH) _lineLength = DEFAULT_LINE_LENGTH;
+            RenderEngine.recalculate_columns();
+        }
 
-        lineLength = _lineLength;
-    }
+        export function getSymbols(): string {
+            return characters;
+        }
 
-    export function setRotation(_rotation: number = DEFAULT_ROTATION): void {
-        rotation = Utility.fixDegrees(_rotation);
-    }
+        export function setSpeed(_speed: number = DEFAULT_SPEED): void {
+            if (_speed < 1 || _speed > MAX_SPEED) _speed = DEFAULT_SPEED;
 
-    export function setUpdateRate(_ups: number = DEFAULT_UPDATE_RATE): void {
-        if (_ups < 1) _ups = DEFAULT_UPDATE_RATE;
+            speed = _speed;
+        }
 
-        ups = _ups;
-    }
+        export function getSpeed(): number {
+            return speed;
+        }
 
-    export function setUseFX(_useFX: boolean = false): void {
-        useFX = _useFX;
-    }
+        export function setLineLength(_lineLength: number = DEFAULT_LINE_LENGTH): void {
+            if (_lineLength < 1 || _lineLength > MAX_LINE_LENGTH) _lineLength = DEFAULT_LINE_LENGTH;
 
-    export function setFX(_fx: MatrixFX.FX = DEFAULT_FX): void {
-        fx = _fx;
-    }
+            lineLength = _lineLength;
+        }
 
-    export function setMutationChance(_chance: number = DEFAULT_MUTATION_CHANCE) {
-        mutationChance = _chance;
+        export function getLineLength(): number {
+            return lineLength;
+        }
+
+        export function setRotation(_rotation: number = DEFAULT_ROTATION): void {
+            rotation = Utility.fixDegrees(_rotation);
+        }
+
+        export function getRotation(): number {
+            return rotation;
+        }
+
+        export function setUpdateRate(_ups: number = DEFAULT_UPDATE_RATE): void {
+            if (_ups < 1) _ups = DEFAULT_UPDATE_RATE;
+
+            ups = _ups;
+        }
+
+        export function getUpdateRate(): number {
+            return ups;
+        }
+
+        export function setUseFX(_useFX: boolean = false): void {
+            useFX = _useFX;
+        }
+
+        export function getUseFX(): boolean {
+            return useFX;
+        }
+
+        export function setFX(_fx: MatrixFX.FX = DEFAULT_FX): void {
+            fx = _fx;
+
+            fx.fx_buffer(width, height);
+        }
+
+        export function getFX(): MatrixFX.FX {
+            return fx;
+        }
+
+        export function setMoveChance(_chance: number = DEFAULT_MOVE_CHANCE) {
+            moveChance = _chance;
+        }
+
+        export function getMoveChance(): number {
+            return moveChance;
+        }
+
+        export function setMutationChance(_chance: number = DEFAULT_MUTATION_CHANCE) {
+            mutationChance = _chance;
+        }
+
+        export function getMutationChance(): number {
+            return mutationChance;
+        }
+
     }
 
     // Rendering
@@ -221,7 +283,7 @@ module Matrix {
                     // ctx.drawImage(bg.getBuffer(), 0, 0, COLUMN_SIZE, height, l_Column.x, 0, COLUMN_SIZE, height);
 
                     // randomly determine regarding speed whether a column should be moved.
-                    let move: boolean = Math.random() < 0.51;
+                    let move: boolean = Math.random() < moveChance;
 
                     let needsNext = true;
                     for (let l_Segment of l_Column.segments) {

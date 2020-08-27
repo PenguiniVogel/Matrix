@@ -68,6 +68,7 @@ declare module Matrix {
     const DEFAULT_ROTATION = 0;
     const DEFAULT_UPDATE_RATE = 32;
     const DEFAULT_FX: MatrixFX.BasicColumnFX;
+    const DEFAULT_MOVE_CHANCE = 0.51;
     const DEFAULT_MUTATION_CHANCE = 0.1;
     const COLUMN_SIZE = 12;
     const MAX_SPEED = 32;
@@ -85,18 +86,32 @@ declare module Matrix {
         updateRate?: number;
         useFX?: boolean;
         fx?: MatrixFX.FX;
+        moveChance?: number;
         mutationChance?: number;
     }
     function create(selector: string, settings?: OptionalSettings): void;
     function start(): void;
     function resize(_width?: number, _height?: number): void;
-    function setColor(_color?: string): void;
-    function setSymbols(_symbols?: string): void;
-    function setSpeed(_speed?: number): void;
-    function setLineLength(_lineLength?: number): void;
-    function setRotation(_rotation?: number): void;
-    function setUpdateRate(_ups?: number): void;
-    function setUseFX(_useFX?: boolean): void;
-    function setFX(_fx?: MatrixFX.FX): void;
-    function setMutationChance(_chance?: number): void;
+    module Settings {
+        function setColor(_color?: string): void;
+        function getColor(): string;
+        function setSymbols(_symbols?: string): void;
+        function getSymbols(): string;
+        function setSpeed(_speed?: number): void;
+        function getSpeed(): number;
+        function setLineLength(_lineLength?: number): void;
+        function getLineLength(): number;
+        function setRotation(_rotation?: number): void;
+        function getRotation(): number;
+        function setUpdateRate(_ups?: number): void;
+        function getUpdateRate(): number;
+        function setUseFX(_useFX?: boolean): void;
+        function getUseFX(): boolean;
+        function setFX(_fx?: MatrixFX.FX): void;
+        function getFX(): MatrixFX.FX;
+        function setMoveChance(_chance?: number): void;
+        function getMoveChance(): number;
+        function setMutationChance(_chance?: number): void;
+        function getMutationChance(): number;
+    }
 }
