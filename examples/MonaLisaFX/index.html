@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<!--
+Copyright (c) 2020 Felix Vogel
+https://github.com/FelixVogel/Matrix
+
+For the full copyright and license information, please view the LICENSE
+file that was distributed with this source code.
+-->
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content="Matrix Visuals" />
+
+    <link rel="icon" href="../../icon.gif" />
+
+    <title>Matrix Examples | Mona Lisa FX</title>
+
+    <style>
+        #matrix-canvas {
+            background-color: #ccc;
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+        }
+    </style>
+</head>
+<body>
+    <noscript>
+        <strong>Sorry, this Website requires JavaScript to be enabled!</strong>
+    </noscript>
+
+    <canvas id="matrix-canvas"></canvas>
+
+    <script src="../../sources/build/matrix.min.js"></script>
+    <script src="script.min.js"></script>
+    <script>MonaLisaFX.load();</script>
+</body>
+</html>

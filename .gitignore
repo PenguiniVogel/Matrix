@@ -10,5 +10,6 @@ test
 old
 
 # Don't Ignore these (specific)
-!sources/build/matrix.js
-!script.js
+!examples/MonaLisaFX/script.min.js
+!sources/build/matrix.min.js
+!script.min.js

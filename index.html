@@ -8,29 +8,67 @@ file that was distributed with this source code.
 -->
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="description" content="Matrix Visuals">
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content="Matrix Visuals" />
+
+    <link rel="icon" href="icon.gif" />
 
     <title>Matrix</title>
-
-    <link rel="icon" href="icon.gif"/>
 
     <style>
         html {
             background-color: #000;
+
+            --container-set-height: 25px;
         }
 
-        #debug {
-            z-index: 2;
+        body {
+            overflow: hidden;
+        }
+
+        #options {
+            font-size: 16px;
+            background-color: #fff;
+            padding: 5px;
             position: absolute;
-            top: 0;
-            right: 0;
-            left: 0;
+            z-index: 2;
+            display: grid;
+            grid-auto-rows: calc((var(--container-set-height) + 2) * 2);
+            grid-row-gap: 10px;
+        }
+
+        #options container {
+            border-bottom: 1px solid #000;
+            padding-bottom: 2px;
+            display: grid;
+            grid-template-columns: 70px 150px;
+            grid-template-rows: var(--container-set-height) var(--container-set-height) 2px;
+        }
+
+        #options container label, #options container span {
+            line-height: calc(var(--container-set-height));
+        }
+
+        #options container a, #options container span {
+            text-align: center;
+        }
+
+        #options container a {
+            line-height: calc(var(--container-set-height) + 0.3px);
+            border: 1px solid #000;
+            border-radius: 15mm;
+            cursor: pointer;
+            transition: color ease-in 0.2s, background-color ease-in 0.2s;
+        }
+
+        #options container a:hover {
             color: #fff;
-            background-color: #000;
-            width: 250px;
-            height: 125px;
+            background-color: #44bb00;
+        }
+
+        #options container label {
+            font-size: 12px;
         }
 
         #matrix-canvas {
@@ -43,9 +81,16 @@ file that was distributed with this source code.
     </style>
 </head>
 <body>
+    <noscript>
+        <strong>Sorry, this Website requires JavaScript to be enabled!</strong>
+    </noscript>
+
     <canvas id="matrix-canvas"></canvas>
 
-    <script src="sources/build/matrix.js"></script>
-    <script src="script.js"></script>
+    <div id="options" style="display: grid;">
+    </div>
+
+    <script src="sources/build/matrix.min.js"></script>
+    <script src="script.min.js"></script>
 </body>
 </html>

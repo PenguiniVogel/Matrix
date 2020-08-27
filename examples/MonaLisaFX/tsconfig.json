@@ -6,6 +6,6 @@
   },
   "files": [
     "script.ts",
-    "examples/shared/Resize.ts"
+    "../shared/Resize.ts"
   ]
 }

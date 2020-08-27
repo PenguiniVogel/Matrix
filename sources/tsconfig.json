@@ -4,8 +4,7 @@
     "lib": ["dom", "es2017", "es2015"],
     "sourceMap": false,
     "declaration": true,
-    "outFile": "build/matrix.js",
-    "watch": true
+    "outFile": "build/matrix.js"
   },
   "files": [
     "Utility.ts",
