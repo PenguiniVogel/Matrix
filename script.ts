@@ -133,15 +133,15 @@ createSetting(
     (val: number) => `${Math.max(1, Math.ceil(val * (Matrix.MAX_LINE_LENGTH / 100.0)))}`
 );
 
-createSetting(
-    'rotation',
-    'range',
-    `${(Settings.getRotation() / 360.0) * 100.0}`,
-    'Rotation:',
-    'The canvas rotation',
-    (val: number) => Settings.setRotation(Math.ceil(val * (360.0 / 100.0))),
-    (val: number) => `${Math.ceil(val * (360.0 / 100.0))}`
-);
+// createSetting(
+//     'rotation',
+//     'range',
+//     `${(Settings.getRotation() / 360.0) * 100.0}`,
+//     'Rotation:',
+//     'The canvas rotation',
+//     (val: number) => Settings.setRotation(Math.ceil(val * (360.0 / 100.0))),
+//     (val: number) => `${Math.ceil(val * (360.0 / 100.0))}`
+// );
 
 createSetting(
     'ups',

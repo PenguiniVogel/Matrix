@@ -12,7 +12,6 @@ module Matrix {
     export const DEFAULT_SYMBOLS = 'ｦｱｳｴｵｶｷｹｺｻｼｽｾｿﾀﾂﾃﾅﾆﾇﾈﾊﾋﾎﾏﾐﾑﾒﾓﾔﾕﾗﾘﾜ日(+*;)-|2589Z';
     export const DEFAULT_SPEED = 1;
     export const DEFAULT_LINE_LENGTH = 16;
-    export const DEFAULT_ROTATION = 0;
     export const DEFAULT_UPDATE_RATE_FX = 32;
     export const DEFAULT_FX: MatrixFX.FX = new MatrixFX.BasicColumnFX();
     export const DEFAULT_COMPOSITE_ALPHA = 0.3;
@@ -56,7 +55,6 @@ module Matrix {
 
     let speed: number = DEFAULT_SPEED;
     let lineLength: number = DEFAULT_LINE_LENGTH;
-    let rotation: number = DEFAULT_ROTATION;
     let upsFX: number = DEFAULT_UPDATE_RATE_FX;
     let useFX: boolean = false;
     let fx: MatrixFX.FX = DEFAULT_FX;
@@ -295,23 +293,18 @@ module Matrix {
         }
 
         /**
-         * Set the rotation of the Matrix canvas
-         *
-         * @param _rotation The new rotation
+         * @deprecated Rotation is not supported starting Build 2908, please implement your own rotation mechanism at your own risk of performance loss!
+         * @param _rotation
          */
-        export function setRotation(_rotation: number = DEFAULT_ROTATION): void {
-            checkCreated('rotation');
-
-            rotation = Utility.fixDegrees(_rotation);
-
-            // TODO rotation
+        export function setRotation(_rotation: number): void {
+            throw new Error('Rotation is not supported starting Build 2908, please implement your own rotation mechanism at your own risk of performance loss!');
         }
 
         /**
          * Get the current rotation of the Matrix canvas
          */
         export function getRotation(): number {
-            return rotation;
+            return 0;
         }
 
         /**
