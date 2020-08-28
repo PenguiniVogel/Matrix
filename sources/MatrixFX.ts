@@ -125,16 +125,17 @@ module MatrixFX {
         private rowCount = 0;
 
         // @internal
-        private yOffset = 0;
-
-        // @internal
         public fx_buffer(width: number, height: number) {
             this.colCount = width / Matrix.COLUMN_SIZE;
             this.rowCount = height / Matrix.COLUMN_SIZE;
 
-            this.reset_translate();
-
             super.fx_buffer(this.colCount, this.rowCount * 2);
+
+            let gradientBufferCanvas: HTMLCanvasElement = document.createElement('canvas');
+            let gradientBufferCtx: CanvasRenderingContext2D = gradientBufferCanvas.getContext('2d');
+
+            gradientBufferCanvas.width = this.colCount;
+            gradientBufferCanvas.height = this.rowCount;
 
             let gradient = this.ctx.createLinearGradient(0, 0, this.colCount, this.rowCount);
 
@@ -144,20 +145,19 @@ module MatrixFX {
             let at = gradientStep;
 
             for (let i = 1, l = this.colors.length; i < l; i ++) {
-                gradient.addColorStop(at, this.colors[i]);
+                gradient.addColorStop(Math.min(1.0, at), this.colors[i]);
 
                 at += gradientStep;
             }
 
             gradient.addColorStop(1, this.colors[0]);
 
-            this.ctx.fillStyle = gradient;
+            gradientBufferCtx.fillStyle = gradient;
 
-            this.ctx.beginPath();
-            this.ctx.fillRect(0, 0, this.colCount, this.rowCount);
+            gradientBufferCtx.beginPath();
+            gradientBufferCtx.fillRect(0, 0, this.colCount, this.rowCount);
 
-            this.ctx.beginPath();
-            this.ctx.fillRect(0, this.rowCount, this.colCount, this.rowCount);
+            this.ctx.drawImage(gradientBufferCanvas, 0, 0, this.colCount, this.rowCount * 2);
         }
 
         // @internal
@@ -169,23 +169,10 @@ module MatrixFX {
 
         // @internal
         public fx_draw(_ctx: CanvasRenderingContext2D, width: number, height: number) {
-            _ctx.drawImage(this.buffer, 0, this.yOffset, this.colCount, this.rowCount, 0, 0, width, height);
+            _ctx.drawImage(this.buffer, 0, 0, width, height);
         }
 
-        // @internal
-        private reset_translate() {
-            this.ctx.translate(0, -this.yOffset);
-
-            this.yOffset = 0;
-        }
-
-        public render(interval: number, width: number, height: number): void {
-            if (this.yOffset >= this.rowCount) this.reset_translate();
-
-            this.yOffset ++;
-
-            this.ctx.translate(0, 1);
-        }
+        public render(interval: number, width: number, height: number): void { }
 
     }
 

@@ -183,12 +183,4 @@ createSelectSetting(
 
 // Matrix.debug_fx();
 
-class TestFX extends MatrixFX.BasicColumnFX {
-    public render(interval: number, width: number, height: number) {
-        console.log('Hi');
-    }
-}
-
-new TestFX().render(0, 0, 0);
-
 Matrix.start();
