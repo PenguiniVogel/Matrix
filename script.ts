@@ -11,7 +11,7 @@
 Matrix.create('#matrix-canvas', {
     color: '#44ff00',
     speed: 16,
-    updateRate: 16,
+    updateRateFX: 16,
     useFX: false,
     fx: new MatrixFX.BasicColumnFX()
 });
@@ -149,7 +149,7 @@ createSetting(
     `${(Settings.getUpdateRate() / 64.0) * 100.0}`,
     'Update rate:',
     'The update rate',
-    (val: number) => Settings.setUpdateRate(Math.ceil(val * (64.0 / 100.0))),
+    (val: number) => Settings.setUpdateRateFX(Math.ceil(val * (64.0 / 100.0))),
     (val: number) => `${Math.max(1, Math.ceil(val * (64.0 / 100.0)))}`
 );
 
@@ -173,12 +173,22 @@ createSelectSetting(
             selected: true
         },
         {
-            title: 'Basic Letter FX',
-            onselect: () => Settings.setFX(new MatrixFX.BasicLetterFX())
+            title: 'Basic Diagonal FX',
+            onselect: () => Settings.setFX(new MatrixFX.BasicDiagonalFX())
         }
     ],
     'FX List:',
     'Included FXs'
 );
+
+// Matrix.debug_fx();
+
+class TestFX extends MatrixFX.BasicColumnFX {
+    public render(interval: number, width: number, height: number) {
+        console.log('Hi');
+    }
+}
+
+new TestFX().render(0, 0, 0);
 
 Matrix.start();

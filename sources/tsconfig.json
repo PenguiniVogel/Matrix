@@ -4,7 +4,9 @@
     "lib": ["dom", "es2017", "es2015"],
     "sourceMap": false,
     "declaration": true,
-    "outFile": "build/matrix.js"
+    "outFile": "build/matrix.js",
+    "stripInternal": true,
+    "experimentalDecorators": true
   },
   "files": [
     "Utility.ts",

@@ -15,7 +15,7 @@ module MonaLisaFX {
     export function load() {
         Matrix.create('#matrix-canvas', {
             speed: 8,
-            updateRate: 16,
+            updateRateFX: 16,
             useFX: false
         });
 
