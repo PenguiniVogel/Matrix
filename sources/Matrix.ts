@@ -29,7 +29,9 @@ module Matrix {
     let started = false;
 
     let width: number = DEFAULT_SIZE;
+    let q_width: number = DEFAULT_SIZE;
     let height: number = DEFAULT_SIZE;
+    let q_height: number = DEFAULT_SIZE;
 
     let canvas: HTMLCanvasElement;
     let ctx: CanvasRenderingContext2D;
@@ -143,7 +145,7 @@ module Matrix {
         canvas = _canvas;
         ctx = _canvas.getContext('2d');
 
-        resize(DEFAULT_SIZE, DEFAULT_SIZE);
+        resize(q_width, q_height);
 
         // Settings
         convertSymbols(DEFAULT_SYMBOLS);
@@ -184,7 +186,12 @@ module Matrix {
      * @param _height The new height
      */
     export function resize(_width: number = DEFAULT_SIZE, _height: number = DEFAULT_SIZE): void {
-        if (!created) throw new Error('Cannot resize before creation!');
+        if (!created) {
+            q_width = _width;
+            q_height = _height;
+
+            return;
+        }
 
         width = _width;
         height = _height;
@@ -297,7 +304,7 @@ module Matrix {
 
             rotation = Utility.fixDegrees(_rotation);
 
-            // TODO rotate canvas
+            // TODO rotation
         }
 
         /**
