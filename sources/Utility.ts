@@ -190,9 +190,9 @@ module Utility {
 
         let result = `${prefix}`;
 
-        for (let u = 0; u < segmentCount; u ++) {
+        for (let u = 0; u < segmentCount; u++) {
             result += '-';
-            for (let i = 0; i < segmentLength; i ++) {
+            for (let i = 0; i < segmentLength; i++) {
                 result += `${UID_CHARSET[Math.floor(Math.random() * UID_CHARSET.length)]}`;
             }
         }
@@ -246,6 +246,100 @@ module Utility {
      */
     export function color_rgba(r: number, g: number, b: number, a = 1.0): string {
         return `rgba(${r}, ${g}, ${b}, ${a})`;
+    }
+
+    // --- Buffer
+
+    /**
+     * This class represents a canvas buffer that can be rendered to
+     */
+    export abstract class Buffer {
+
+        /**
+         * The underlying canvas
+         */
+        protected canvas: HTMLCanvasElement;
+
+        /**
+         * The underlying context
+         */
+        protected ctx: CanvasRenderingContext2D;
+
+        /**
+         * Whether the current buffer can be resized.
+         */
+        protected allowResize: boolean = true;
+
+        protected constructor(options?: { width: number, height: number, allowResize?: boolean }) {
+            this.canvas = document.createElement('canvas');
+            this.ctx = this.canvas.getContext('2d');
+
+            if (options) {
+                if (options.width) this.canvas.width = options.width;
+                if (options.height) this.canvas.height = options.height;
+                if (options.allowResize != null) this.allowResize = options.allowResize;
+            }
+        }
+
+        /**
+         * Get the current canvas width
+         */
+        protected width(): number {
+            return this.canvas.width;
+        }
+
+        /**
+         * Get the current canvas height
+         */
+        protected height(): number {
+            return this.canvas.height;
+        }
+
+        /**
+         * Get the underlying canvas that this buffer renders to
+         */
+        public html_canvas(): HTMLCanvasElement {
+            return this.canvas;
+        }
+
+        /**
+         * Resize the buffer
+         *
+         * @param width The new width
+         * @param height The new height
+         */
+        public resize(width: number, height: number): void {
+            if (!this.allowResize) return;
+
+            this.canvas.width = width;
+            this.canvas.height = height;
+
+            this.on_resize();
+        }
+
+        /**
+         * This gets called upon a resize. <br/>
+         * Note: This will <b>not</b> get called if {@link allowResize} is <code>false</code>!
+         */
+        public abstract on_resize(): void;
+
+        /**
+         * This method gets called on every updateFX by the Matrix core. <br/>
+         * Remember, please optimize and move everything that only has to / can happen on a resize to {@link on_resize}
+         */
+        public abstract draw(): void;
+
+        /**
+         * Draw the buffer to the target context <br/>
+         * Note this will render the buffer canvas in stretch mode by default,
+         * meaning it will get stretched to the size of the target canvas!
+         *
+         * @param targetContext The target {@link CanvasRenderingContext2D context}
+         */
+        public drawTo(targetContext: CanvasRenderingContext2D): void {
+            targetContext.drawImage(this.html_canvas(), 0, 0, targetContext.canvas.width, targetContext.canvas.height);
+        }
+
     }
 
 }

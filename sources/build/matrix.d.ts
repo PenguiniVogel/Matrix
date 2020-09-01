@@ -177,6 +177,65 @@ declare module Utility {
      * @param a The alpha (0.0 - 1.0), defaults to <code>1.0</code>
      */
     function color_rgba(r: number, g: number, b: number, a?: number): string;
+    /**
+     * This class represents a canvas buffer that can be rendered to
+     */
+    abstract class Buffer {
+        /**
+         * The underlying canvas
+         */
+        protected canvas: HTMLCanvasElement;
+        /**
+         * The underlying context
+         */
+        protected ctx: CanvasRenderingContext2D;
+        /**
+         * Whether the current buffer can be resized.
+         */
+        protected allowResize: boolean;
+        protected constructor(options?: {
+            width: number;
+            height: number;
+            allowResize?: boolean;
+        });
+        /**
+         * Get the current canvas width
+         */
+        protected width(): number;
+        /**
+         * Get the current canvas height
+         */
+        protected height(): number;
+        /**
+         * Get the underlying canvas that this buffer renders to
+         */
+        html_canvas(): HTMLCanvasElement;
+        /**
+         * Resize the buffer
+         *
+         * @param width The new width
+         * @param height The new height
+         */
+        resize(width: number, height: number): void;
+        /**
+         * This gets called upon a resize. <br/>
+         * Note: This will <b>not</b> get called if {@link allowResize} is <code>false</code>!
+         */
+        abstract on_resize(): void;
+        /**
+         * This method gets called on every updateFX by the Matrix core. <br/>
+         * Remember, please optimize and move everything that only has to / can happen on a resize to {@link on_resize}
+         */
+        abstract draw(): void;
+        /**
+         * Draw the buffer to the target context <br/>
+         * Note this will render the buffer canvas in stretch mode by default,
+         * meaning it will get stretched to the size of the target canvas!
+         *
+         * @param targetContext The target {@link CanvasRenderingContext2D context}
+         */
+        drawTo(targetContext: CanvasRenderingContext2D): void;
+    }
 }
 /**
  Copyright (c) 2020 Felix Vogel
@@ -193,29 +252,28 @@ declare module MatrixFX {
     /**
      * This is the base class for any FX
      */
-    abstract class FX {
-        protected buffer: HTMLCanvasElement;
-        protected ctx: CanvasRenderingContext2D;
-        constructor();
-        fx_buffer(width: number, height: number): void;
-        fx_render(interval: number, width: number, height: number): HTMLCanvasElement;
-        fx_draw(_ctx: CanvasRenderingContext2D, width: number, height: number): void;
-        abstract render(interval: number, width: number, height: number): void;
+    abstract class FX extends Utility.Buffer {
+        constructor(options?: {
+            width: number;
+            height: number;
+            allowResize?: boolean;
+        });
     }
     /**
-     * Internal FX builtin
-     * @sealed
+     * The default FX, renders a simple {@link Matrix.Settings.Color Color}
      */
-    class BasicColumnFX extends FX {
-        render(interval: number, width: number, height: number): void;
-    }
+    const BUILTIN_FX_COLOR: FX & {
+        setColor: (_color: Matrix.Settings.Color) => void;
+        getColor: () => Matrix.Settings.Color;
+    };
     /**
-     * Internal Builtin
-     * @sealed
+     * Renders a left to right moving rainbow gradient
      */
-    class BasicDiagonalFX extends FX {
-        render(interval: number, width: number, height: number): void;
-    }
+    const BUILTIN_FX_COLUMNS: FX;
+    /**
+     * Renders a top left to bottom right, bottom to top moving rainbow gradient
+     */
+    const BUILTIN_FX_DIAGONAL: FX;
 }
 /**
  Copyright (c) 2020 Felix Vogel
@@ -231,7 +289,10 @@ declare module Matrix {
     const DEFAULT_SPEED = 1;
     const DEFAULT_LINE_LENGTH = 16;
     const DEFAULT_UPDATE_RATE_FX = 32;
-    const DEFAULT_FX: MatrixFX.FX;
+    const DEFAULT_FX: MatrixFX.FX & {
+        setColor: (_color: string | CanvasGradient | CanvasPattern) => void;
+        getColor: () => string | CanvasGradient | CanvasPattern;
+    };
     const DEFAULT_COMPOSITE_ALPHA = 0.3;
     const DEFAULT_MOVE_CHANCE = 0.51;
     const DEFAULT_MUTATION_CHANCE = 0.1;
@@ -263,17 +324,9 @@ declare module Matrix {
          */
         lineLength?: number;
         /**
-         * The initial rotation of the Matrix canvas
-         */
-        rotation?: number;
-        /**
          * The initial update rate of the FX
          */
         updateRateFX?: number;
-        /**
-         * Whether to use FX or not initially
-         */
-        useFX?: boolean;
         /**
          * The initial {@link MatrixFX.FX} to use
          */
@@ -316,16 +369,17 @@ declare module Matrix {
      */
     function debug_fx(): void;
     module Settings {
+        type Color = string | CanvasGradient | CanvasPattern;
         /**
-         * Set the color of the Matrix canvas
+         * Set the color of the default {@link MatrixFX.BasicColorFX FX}
          *
          * @param _color The new color
          */
-        function setColor(_color?: string): void;
+        function setColor(_color?: Color): void;
         /**
-         * Get the current Matrix canvas color
+         * Get the current default {@link MatrixFX.BasicColorFX FX} color
          */
-        function getColor(): string;
+        function getColor(): Color;
         /**
          * Set the symbols for Matrix to use
          *
@@ -357,15 +411,6 @@ declare module Matrix {
          */
         function getLineLength(): number;
         /**
-         * @deprecated Rotation is not supported starting Build 2908, please implement your own rotation mechanism at your own risk of performance loss!
-         * @param _rotation
-         */
-        function setRotation(_rotation: number): void;
-        /**
-         * Get the current rotation of the Matrix canvas
-         */
-        function getRotation(): number;
-        /**
          * Set the FX update rate
          *
          * @param _ups The new FX update rate
@@ -375,16 +420,6 @@ declare module Matrix {
          * Get the current FX update rate
          */
         function getUpdateRate(): number;
-        /**
-         * Set whether FX should be used
-         *
-         * @param _useFX Whether FX should be used
-         */
-        function setUseFX(_useFX?: boolean): void;
-        /**
-         * Get whether FX is currently used
-         */
-        function getUseFX(): boolean;
         /**
          * Set the {@link MatrixFX.FX} to be used
          *

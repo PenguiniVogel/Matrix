@@ -15,8 +15,7 @@ module MonaLisaFX {
     export function load() {
         Matrix.create('#matrix-canvas', {
             speed: 8,
-            updateRateFX: 16,
-            useFX: false
+            updateRateFX: 16
         });
 
         Matrix.start();
@@ -25,7 +24,7 @@ module MonaLisaFX {
 
         image.onload = (e?) => {
             Matrix.Settings.setFX(new MonaLisaFX.FX());
-            Matrix.Settings.setUseFX(true);
+            // Matrix.Settings.setUseFX(true);
         };
 
         image.src = 'mona_lisa.jpg';
@@ -37,10 +36,12 @@ module MonaLisaFX {
             super();
         }
 
-        public render(interval: number, width: number, height: number) {
+        public on_resize() {
             this.ctx.beginPath();
-            this.ctx.drawImage(image, 0, 0, width, height);
+            this.ctx.drawImage(image, 0, 0, this.width(), this.height());
         }
+
+        public draw() { }
 
     }
 

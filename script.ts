@@ -9,11 +9,10 @@
 ///<reference path="sources/build/matrix.d.ts"/>
 
 Matrix.create('#matrix-canvas', {
-    color: '#44ff00',
+    color: '#5bb9ff',
     speed: 16,
     updateRateFX: 16,
-    useFX: false,
-    fx: new MatrixFX.BasicColumnFX()
+    fx: MatrixFX.BUILTIN_FX_COLOR
 });
 
 import Settings = Matrix.Settings;
@@ -98,7 +97,7 @@ function createSelectSetting(id: string, options: {title: string, onselect?: () 
 createSetting(
     'color',
     'color',
-    Settings.getColor(),
+    Settings.getColor() as string,
     'Color:',
     'The base color',
     (val) => Settings.setColor(val)
@@ -153,28 +152,32 @@ createSetting(
     (val: number) => `${Math.max(1, Math.ceil(val * (64.0 / 100.0)))}`
 );
 
-createSetting(
-    'usefx',
-    'checkbox',
-    `${Settings.getUseFX()}`,
-    'Use FX:',
-    'Use FX',
-    (val: boolean) => {
-        Settings.setUseFX(val);
-    }
-);
+// createSetting(
+//     'usefx',
+//     'checkbox',
+//     `${Settings.getUseFX()}`,
+//     'Use FX:',
+//     'Use FX',
+//     (val: boolean) => {
+//         Settings.setUseFX(val);
+//     }
+// );
 
 createSelectSetting(
     'fxlist',
     [
         {
-            title: 'Basic Column FX',
-            onselect: () => Settings.setFX(new MatrixFX.BasicColumnFX()),
+            title: 'Basic Color FX',
+            onselect: () => Settings.setFX(MatrixFX.BUILTIN_FX_COLOR),
             selected: true
         },
         {
+            title: 'Basic Column FX',
+            onselect: () => Settings.setFX(MatrixFX.BUILTIN_FX_COLUMNS)
+        },
+        {
             title: 'Basic Diagonal FX',
-            onselect: () => Settings.setFX(new MatrixFX.BasicDiagonalFX())
+            onselect: () => Settings.setFX(MatrixFX.BUILTIN_FX_DIAGONAL)
         }
     ],
     'FX List:',

@@ -13,7 +13,7 @@ module Matrix {
     export const DEFAULT_SPEED = 1;
     export const DEFAULT_LINE_LENGTH = 16;
     export const DEFAULT_UPDATE_RATE_FX = 32;
-    export const DEFAULT_FX: MatrixFX.FX = new MatrixFX.BasicColumnFX();
+    export const DEFAULT_FX = MatrixFX.BUILTIN_FX_COLOR;
     export const DEFAULT_COMPOSITE_ALPHA = 0.3;
     export const DEFAULT_MOVE_CHANCE = 0.51;
     export const DEFAULT_MUTATION_CHANCE = 0.1;
@@ -35,8 +35,6 @@ module Matrix {
     let canvas: HTMLCanvasElement;
     let ctx: CanvasRenderingContext2D;
 
-    let color: string = DEFAULT_COLOR;
-
     let characters: string;
     let characterSizes: number[];
 
@@ -56,7 +54,6 @@ module Matrix {
     let speed: number = DEFAULT_SPEED;
     let lineLength: number = DEFAULT_LINE_LENGTH;
     let upsFX: number = DEFAULT_UPDATE_RATE_FX;
-    let useFX: boolean = false;
     let fx: MatrixFX.FX = DEFAULT_FX;
     let compositeAlpha: number = DEFAULT_COMPOSITE_ALPHA;
     let moveChance: number = DEFAULT_MOVE_CHANCE;
@@ -90,20 +87,22 @@ module Matrix {
          */
         lineLength?: number,
 
-        /**
-         * The initial rotation of the Matrix canvas
-         */
+        /*
+         * @deprecated
+         *
         rotation?: number,
+         */
 
         /**
          * The initial update rate of the FX
          */
         updateRateFX?: number,
 
-        /**
-         * Whether to use FX or not initially
+        /*
+         * @deprecated
+         *
+        useFX?: boolean
          */
-        useFX?: boolean,
 
         /**
          * The initial {@link MatrixFX.FX} to use
@@ -148,16 +147,18 @@ module Matrix {
         // Settings
         convertSymbols(DEFAULT_SYMBOLS);
 
+        DEFAULT_FX.setColor(DEFAULT_COLOR);
+
         if (settings) {
             if (settings.size) resize(settings.size.width, settings.size.height);
             if (settings.color) Settings.setColor(settings.color);
             if (settings.symbols) Settings.setSymbols(settings.symbols);
             if (settings.speed) Settings.setSpeed(settings.speed);
             if (settings.lineLength) Settings.setLineLength(settings.lineLength);
-            if (settings.rotation) Settings.setRotation(settings.rotation);
+            // if (settings.rotation) Settings.setRotation(settings.rotation);
             if (settings.updateRateFX) Settings.setUpdateRateFX(settings.updateRateFX);
-            if (settings.useFX != null) Settings.setUseFX(settings.useFX);
-            if (settings.fx && settings.fx.render) Settings.setFX(settings.fx);
+            // if (settings.useFX != null) Settings.setUseFX(settings.useFX);
+            if (settings.fx) Settings.setFX(settings.fx);
             if (settings.compositeAlpha) Settings.setCompositeAlpha(settings.compositeAlpha);
             if (settings.moveChance) Settings.setMoveChance(settings.moveChance);
             if (settings.mutationChance) Settings.setMutationChance(settings.mutationChance);
@@ -197,7 +198,7 @@ module Matrix {
         canvas.width = _width;
         canvas.height = _height;
 
-        fx.fx_buffer(_width, _height);
+        fx.resize(_width, _height);
 
         RenderEngine.recalculate_columns();
     }
@@ -209,7 +210,7 @@ module Matrix {
     export function debug_fx(): void {
         if (started) throw new Error('Cannot debug fx if already started!');
 
-        Settings.setUseFX(true);
+        // Settings.setUseFX(true);
 
         RenderEngine.debug_fx();
     }
@@ -220,20 +221,22 @@ module Matrix {
             if (!created) throw new Error(`Cannot set setting "${settingName}" before creation!`);
         }
 
+        export type Color = string | CanvasGradient | CanvasPattern;
+
         /**
-         * Set the color of the Matrix canvas
+         * Set the color of the default {@link MatrixFX.BasicColorFX FX}
          *
          * @param _color The new color
          */
-        export function setColor(_color: string = DEFAULT_COLOR): void {
-            color = _color;
+        export function setColor(_color: Color = DEFAULT_COLOR): void {
+            DEFAULT_FX.setColor(_color);
         }
 
         /**
-         * Get the current Matrix canvas color
+         * Get the current default {@link MatrixFX.BasicColorFX FX} color
          */
-        export function getColor(): string {
-            return color;
+        export function getColor(): Color {
+            return DEFAULT_FX.getColor();
         }
 
         /**
@@ -292,20 +295,21 @@ module Matrix {
             return lineLength;
         }
 
-        /**
+        /*
          * @deprecated Rotation is not supported starting Build 2908, please implement your own rotation mechanism at your own risk of performance loss!
-         * @param _rotation
-         */
+         *
         export function setRotation(_rotation: number): void {
             throw new Error('Rotation is not supported starting Build 2908, please implement your own rotation mechanism at your own risk of performance loss!');
         }
-
-        /**
-         * Get the current rotation of the Matrix canvas
          */
+
+        /*
+         * @deprecated Rotation is not supported starting Build 2908, please implement your own rotation mechanism at your own risk of performance loss!
+         *
         export function getRotation(): number {
             return 0;
         }
+         */
 
         /**
          * Set the FX update rate
@@ -325,21 +329,21 @@ module Matrix {
             return upsFX;
         }
 
-        /**
-         * Set whether FX should be used
+        /*
+         * @deprecated FX is always enabled by default since build 3108.
          *
-         * @param _useFX Whether FX should be used
-         */
         export function setUseFX(_useFX: boolean = false): void {
-            useFX = _useFX;
+            throw new Error('FX is always enabled by default since build 3108.');
         }
-
-        /**
-         * Get whether FX is currently used
          */
+
+        /*
+         * @deprecated FX is always enabled by default since build 3108.
+         *
         export function getUseFX(): boolean {
-            return useFX;
+            return true;
         }
+         */
 
         /**
          * Set the {@link MatrixFX.FX} to be used
@@ -351,8 +355,7 @@ module Matrix {
 
             fx = _fx;
 
-            fx.fx_buffer(width, height);
-            fx.fx_render(0, width, height);
+            fx.resize(width, height);
         }
 
         /**
@@ -473,7 +476,7 @@ module Matrix {
 
         function render_columns(/* delta: number */) {
             if (columnsAccumulator >= 1000.0 / speed) {
-                ctx.beginPath();
+                // ctx.beginPath();
                 ctx.clearRect(0, 0, width, height);
 
                 render_background();
@@ -505,7 +508,7 @@ module Matrix {
 
                                 needsNext = false;
                             } else {
-                                ctx.beginPath();
+                                // ctx.beginPath();
                                 ctx.clearRect(l_Column.x, l_Segment.y, COLUMN_SIZE, COLUMN_SIZE);
 
                                 l_Segment.y += COLUMN_SIZE;
@@ -544,27 +547,21 @@ module Matrix {
         function render_background() {
             ctx.globalAlpha = compositeAlpha;
 
-            ctx.drawImage(background.getBuffer(), 0, 0);
+            ctx.drawImage(background.html_canvas(), 0, 0);
 
             ctx.globalAlpha = 1.0;
         }
 
-        function render_composite_color(delta: number) {
+        function render_composite_color(/* delta: number */) {
             ctx.globalCompositeOperation = Utility.DrawingMode.SOURCE_ATOP;
 
-            if (useFX) {
-                if (colorAccumulator >= 1000.0 / upsFX) {
-                    fx.fx_render(delta, width, height);
+            if (colorAccumulator >= 1000.0 / upsFX) {
+                fx.draw();
 
-                    colorAccumulator = 0;
-                }
-
-                fx.fx_draw(ctx, width, height);
-            } else {
-                ctx.fillStyle = color;
-                ctx.beginPath();
-                ctx.fillRect(0, 0, width, height);
+                colorAccumulator = 0;
             }
+
+            fx.drawTo(ctx);
 
             ctx.globalCompositeOperation = Utility.DrawingMode.SOURCE_OVER;
 
@@ -578,7 +575,7 @@ module Matrix {
 
             colorAccumulator += delta;
 
-            render_composite_color(delta);
+            render_composite_color(/* delta */);
         }
 
         function render_process_debugFX(delta: number): void {
@@ -587,7 +584,7 @@ module Matrix {
             if (colorAccumulator >= 1000.0 / upsFX) {
                 ctx.fillRect(0, 0, width, height);
 
-                render_composite_color(delta);
+                render_composite_color(/* delta */);
             }
         }
 
@@ -612,6 +609,7 @@ module Matrix {
 
             background = new BGBuffer();
 
+            ctx.strokeStyle = '#000';
             ctx.fillStyle = '#000';
 
             paint_reset();
@@ -625,19 +623,19 @@ module Matrix {
 
             ctx.scale(1.2, 1.2);
 
-            if (background) background.render();
+            if (background) background.resize(width, height);
         }
 
         function paint_letter(char: number, x: number, y: number): void {
-            ctx.beginPath();
+            // ctx.beginPath();
             ctx.clearRect(x, y, COLUMN_SIZE, COLUMN_SIZE);
 
             ctx.beginPath();
-            ctx.fillText(characters[char], x + 6 - characterSizes[char], y + 2, COLUMN_SIZE);
+            ctx.strokeText(characters[char], x + 6 - characterSizes[char], y + 2, COLUMN_SIZE);
         }
 
         function paint_letter_mutation(x: number, y: number) {
-            ctx.beginPath();
+            // ctx.beginPath();
             ctx.clearRect(x, y, COLUMN_SIZE, COLUMN_SIZE);
 
             ctx.globalAlpha = 0.3;
@@ -648,38 +646,33 @@ module Matrix {
             ctx.globalAlpha = 1.0;
         }
 
+        // --- Buffers
+
         /**
-         * This renders the "dot" background to save on resources
+         * This renders the "dotted" background to save on resources
          * as it only renders it on every resize
          */
-        class BGBuffer {
-
-            private readonly canvas: HTMLCanvasElement;
-            private readonly ctx: CanvasRenderingContext2D;
+        class BGBuffer extends Utility.Buffer {
 
             constructor() {
-                this.canvas = document.createElement('canvas');
-                this.ctx = this.canvas.getContext('2d');
+                super();
 
                 this.ctx.fillStyle = '#000';
             }
 
-            public render() {
-                this.canvas.width = width;
-                this.canvas.height = height;
+            public on_resize(): void {
+                this.draw();
+            }
 
-                this.ctx.clearRect(0, 0, width, height);
+            public draw(): void {
+                this.ctx.clearRect(0, 0, this.width(), this.height());
 
-                for (let y = 0; y < height; y += COLUMN_SIZE) {
-                    for (let x = 0; x < width; x += COLUMN_SIZE) {
+                for (let y = 0; y < this.height(); y += COLUMN_SIZE) {
+                    for (let x = 0; x < this.width(); x += COLUMN_SIZE) {
                         this.ctx.beginPath();
                         this.ctx.fillRect(x + 5, y + 5, 2, 2);
                     }
                 }
-            }
-
-            public getBuffer(): HTMLCanvasElement {
-                return this.canvas;
             }
 
         }

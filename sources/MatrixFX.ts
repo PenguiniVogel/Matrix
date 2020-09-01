@@ -15,35 +15,48 @@ module MatrixFX {
     /**
      * This is the base class for any FX
      */
-    export abstract class FX {
+    export abstract class FX extends Utility.Buffer {
 
-        protected buffer: HTMLCanvasElement;
-        protected ctx: CanvasRenderingContext2D;
+        constructor(options?: { width: number, height: number, allowResize?: boolean }) {
+            super(options);
+        }
 
+    }
+
+    // --- Builtin FX Classes
+
+    /**
+     * Internal FX builtin
+     * @sealed
+     */
+    class BasicColorFX extends FX {
+
+        // @internal
         constructor() {
-            this.buffer = document.createElement('canvas');
-            this.ctx = this.buffer.getContext('2d');
+            super({ width: 1, height: 1, allowResize: false });
+
+            // this.setColor(Matrix.DEFAULT_COLOR);
         }
 
+        public setColor(_color: Matrix.Settings.Color): void {
+            this.ctx.fillStyle = _color;
 
-        public fx_buffer(width: number, height: number): void {
-            this.buffer.width = width;
-            this.buffer.height = height;
+            this.draw();
         }
 
-        public fx_render(interval: number, width: number, height: number): HTMLCanvasElement {
-            this.ctx.clearRect(0, 0, width, height);
-
-            this.render(interval, width, height);
-
-            return this.buffer;
+        public getColor(): Matrix.Settings.Color {
+            return this.ctx.fillStyle;
         }
 
-        public fx_draw(_ctx: CanvasRenderingContext2D, width: number, height: number): void {
-            _ctx.drawImage(this.buffer, 0, 0);
-        }
+        public on_resize() { }
 
-        public abstract render(interval: number, width: number, height: number): void;
+        public draw() {
+            // this.ctx.beginPath();
+            // this.ctx.clearRect(0, 0, 1, 1);
+
+            this.ctx.beginPath();
+            this.ctx.fillRect(0, 0, 1, 1);
+        }
 
     }
 
@@ -51,7 +64,7 @@ module MatrixFX {
      * Internal FX builtin
      * @sealed
      */
-    export class BasicColumnFX extends FX {
+    class BasicColumnFX extends FX {
 
         // @internal
         private hueOffset = 0;
@@ -63,20 +76,18 @@ module MatrixFX {
         private colHue = 0;
 
         // @internal
-        public fx_buffer(width: number, height: number) {
-            this.colCount = width / Matrix.COLUMN_SIZE;
-
-            this.colHue = 360.0 / this.colCount;
-
-            super.fx_buffer(this.colCount, 1);
+        public drawTo(targetContext: CanvasRenderingContext2D) {
+            // super.drawTo(targetContext);
+            targetContext.drawImage(this.html_canvas(), 0, 0, targetContext.canvas.width, targetContext.canvas.height);
         }
 
-        // @internal
-        public fx_draw(_ctx: CanvasRenderingContext2D, width: number, height: number) {
-            _ctx.drawImage(this.buffer, 0, 0, width, height);
+        public on_resize() {
+            this.colCount = this.width() / Matrix.COLUMN_SIZE;
+
+            this.draw();
         }
 
-        public render(interval: number, width: number, height: number): void {
+        public draw() {
             for (let x = 0; x < this.colCount; x ++) {
                 this.ctx.fillStyle = Utility.color_hsl(
                     Utility.fixDegrees(this.hueOffset - this.colHue * x)
@@ -94,7 +105,7 @@ module MatrixFX {
      * Internal Builtin
      * @sealed
      */
-    export class BasicDiagonalFX extends FX {
+    class BasicDiagonalFX extends FX {
 
         // @internal
         private colors: string[] = [
@@ -125,11 +136,29 @@ module MatrixFX {
         private rowCount = 0;
 
         // @internal
-        public fx_buffer(width: number, height: number) {
-            this.colCount = width / Matrix.COLUMN_SIZE;
-            this.rowCount = height / Matrix.COLUMN_SIZE;
+        private yOffset = 0;
 
-            super.fx_buffer(this.colCount, this.rowCount * 2);
+        // @internal
+        public drawTo(targetContext: CanvasRenderingContext2D) {
+            // super.drawTo(targetContext);
+            if (this.yOffset >= this.rowCount) {
+                this.yOffset = 0;
+            }
+
+            this.yOffset ++;
+
+            targetContext.drawImage(this.html_canvas(), 0, this.yOffset, targetContext.canvas.width, targetContext.canvas.height);
+        }
+
+        public on_resize() {
+            this.colCount = this.width() / Matrix.COLUMN_SIZE;
+            this.rowCount = this.height() / Matrix.COLUMN_SIZE;
+
+            this.canvas.width = this.colCount;
+            this.canvas.height = this.rowCount * 2;
+
+            this.ctx.beginPath();
+            this.ctx.clearRect(0, 0, this.colCount, this.rowCount * 2);
 
             let gradientBufferCanvas: HTMLCanvasElement = document.createElement('canvas');
             let gradientBufferCtx: CanvasRenderingContext2D = gradientBufferCanvas.getContext('2d');
@@ -157,23 +186,32 @@ module MatrixFX {
             gradientBufferCtx.beginPath();
             gradientBufferCtx.fillRect(0, 0, this.colCount, this.rowCount);
 
-            this.ctx.drawImage(gradientBufferCanvas, 0, 0, this.colCount, this.rowCount * 2);
+            this.ctx.drawImage(gradientBufferCanvas, 0, 0, this.colCount, this.rowCount);
+            this.ctx.drawImage(gradientBufferCanvas, this.colCount, this.rowCount, -this.colCount, this.rowCount);
         }
 
-        // @internal
-        public fx_render(interval: number, width: number, height: number): HTMLCanvasElement {
-            this.render(interval, width, height);
-
-            return this.buffer;
-        }
-
-        // @internal
-        public fx_draw(_ctx: CanvasRenderingContext2D, width: number, height: number) {
-            _ctx.drawImage(this.buffer, 0, 0, width, height);
-        }
-
-        public render(interval: number, width: number, height: number): void { }
+        public draw() { }
 
     }
+
+    // --- Builtin FX
+
+    /**
+     * The default FX, renders a simple {@link Matrix.Settings.Color Color}
+     */
+    export const BUILTIN_FX_COLOR: FX & {
+        setColor: (_color: Matrix.Settings.Color) => void,
+        getColor: () => Matrix.Settings.Color
+    } = new BasicColorFX();
+
+    /**
+     * Renders a left to right moving rainbow gradient
+     */
+    export const BUILTIN_FX_COLUMNS: FX = new BasicColumnFX();
+
+    /**
+     * Renders a top left to bottom right, bottom to top moving rainbow gradient
+     */
+    export const BUILTIN_FX_DIAGONAL: FX = new BasicDiagonalFX();
 
 }
