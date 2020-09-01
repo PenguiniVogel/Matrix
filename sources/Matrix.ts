@@ -16,6 +16,7 @@ module Matrix {
     export const DEFAULT_FX = MatrixFX.BUILTIN_FX_COLOR;
     export const DEFAULT_COMPOSITE_ALPHA = 0.3;
     export const DEFAULT_MOVE_CHANCE = 0.51;
+    export const DEFAULT_WAIT_TIME = 25;
     export const DEFAULT_MUTATION_CHANCE = 0.1;
 
     export const COLUMN_SIZE = 12;
@@ -423,6 +424,7 @@ module Matrix {
          * Represents a column in the Matrix
          */
         interface Column {
+            wait: number,
             x: number,
             segments: ColumnSegment[]
         }
@@ -449,6 +451,7 @@ module Matrix {
 
             for (let x = 0; x < width; x += COLUMN_SIZE) {
                 columns.push({
+                    wait: DEFAULT_WAIT_TIME + (DEFAULT_WAIT_TIME * moveChance * Math.random()),
                     x: x,
                     segments: [create_segment()]
                 });
@@ -474,7 +477,7 @@ module Matrix {
 
         let background: BGBuffer;
 
-        function render_columns(/* delta: number */) {
+        function render_columns(delta: number) {
             if (columnsAccumulator >= 1000.0 / speed) {
                 // ctx.beginPath();
                 ctx.clearRect(0, 0, width, height);
@@ -483,9 +486,13 @@ module Matrix {
 
                 for (let l_Column of columns) {
                     // randomly determine regarding speed whether a column should be moved.
-                    let move: boolean = Math.random() < moveChance;
+                    let move: boolean = (l_Column.wait -= delta) <= 0;
 
-                    let needsNext = true;
+                    if (move) {
+                        l_Column.wait = DEFAULT_WAIT_TIME + (DEFAULT_WAIT_TIME * moveChance * Math.random());
+                    }
+
+                    let needsNext = move;
                     for (let l_Segment of l_Column.segments) {
                         if (l_Segment.delay > 0) {
                             needsNext = false;
@@ -533,7 +540,7 @@ module Matrix {
                         }
                     }
 
-                    if (move && needsNext) {
+                    if (needsNext) {
                         l_Column.segments.push(create_segment());
                     }
 
@@ -571,7 +578,7 @@ module Matrix {
         function render_process_normal(delta: number): void {
             columnsAccumulator += delta;
 
-            render_columns(/* delta */);
+            render_columns(delta);
 
             colorAccumulator += delta;
 

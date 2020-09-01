@@ -295,6 +295,7 @@ declare module Matrix {
     };
     const DEFAULT_COMPOSITE_ALPHA = 0.3;
     const DEFAULT_MOVE_CHANCE = 0.51;
+    const DEFAULT_WAIT_TIME = 25;
     const DEFAULT_MUTATION_CHANCE = 0.1;
     const COLUMN_SIZE = 12;
     const MAX_SPEED = 32;
