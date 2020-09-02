@@ -285,6 +285,7 @@ declare module MatrixFX {
 declare module Matrix {
     const DEFAULT_SIZE = 300;
     const DEFAULT_COLOR = "#44ff00";
+    const DEFAULT_BACKGROUND_COLOR = "#000";
     const DEFAULT_SYMBOLS = "\uFF66\uFF71\uFF73\uFF74\uFF75\uFF76\uFF77\uFF79\uFF7A\uFF7B\uFF7C\uFF7D\uFF7E\uFF7F\uFF80\uFF82\uFF83\uFF85\uFF86\uFF87\uFF88\uFF8A\uFF8B\uFF8E\uFF8F\uFF90\uFF91\uFF92\uFF93\uFF94\uFF95\uFF97\uFF98\uFF9C\u65E5(+*;)-|2589Z";
     const DEFAULT_SPEED = 1;
     const DEFAULT_LINE_LENGTH = 16;
@@ -295,7 +296,7 @@ declare module Matrix {
     };
     const DEFAULT_COMPOSITE_ALPHA = 0.3;
     const DEFAULT_MOVE_CHANCE = 0.51;
-    const DEFAULT_WAIT_TIME = 25;
+    const DEFAULT_WAIT_TIME = 20;
     const DEFAULT_MUTATION_CHANCE = 0.1;
     const COLUMN_SIZE = 12;
     const MAX_SPEED = 32;
@@ -312,6 +313,10 @@ declare module Matrix {
          * The initial color of the Matrix canvas
          */
         color?: string;
+        /**
+         * The initial background color
+         */
+        backgroundColor?: string;
         /**
          * The initial symbols of the Matrix
          */
@@ -381,6 +386,16 @@ declare module Matrix {
          * Get the current default {@link MatrixFX.BasicColorFX FX} color
          */
         function getColor(): Color;
+        /**
+         * Set the color of the background
+         *
+         * @param _backgroundColor The new background color
+         */
+        function setBackgroundColor(_backgroundColor?: Color): void;
+        /**
+         * Get the current background color
+         */
+        function getBackgroundColor(): Color;
         /**
          * Set the symbols for Matrix to use
          *

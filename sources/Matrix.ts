@@ -9,6 +9,7 @@ module Matrix {
 
     export const DEFAULT_SIZE = 300;
     export const DEFAULT_COLOR = '#44ff00';
+    export const DEFAULT_BACKGROUND_COLOR = '#000';
     export const DEFAULT_SYMBOLS = 'ｦｱｳｴｵｶｷｹｺｻｼｽｾｿﾀﾂﾃﾅﾆﾇﾈﾊﾋﾎﾏﾐﾑﾒﾓﾔﾕﾗﾘﾜ日(+*;)-|2589Z';
     export const DEFAULT_SPEED = 1;
     export const DEFAULT_LINE_LENGTH = 16;
@@ -16,7 +17,7 @@ module Matrix {
     export const DEFAULT_FX = MatrixFX.BUILTIN_FX_COLOR;
     export const DEFAULT_COMPOSITE_ALPHA = 0.3;
     export const DEFAULT_MOVE_CHANCE = 0.51;
-    export const DEFAULT_WAIT_TIME = 25;
+    export const DEFAULT_WAIT_TIME = 20;
     export const DEFAULT_MUTATION_CHANCE = 0.1;
 
     export const COLUMN_SIZE = 12;
@@ -52,6 +53,7 @@ module Matrix {
         return Math.floor(Math.random() * characters.length);
     }
 
+    let backgroundColor: string = DEFAULT_BACKGROUND_COLOR;
     let speed: number = DEFAULT_SPEED;
     let lineLength: number = DEFAULT_LINE_LENGTH;
     let upsFX: number = DEFAULT_UPDATE_RATE_FX;
@@ -72,6 +74,11 @@ module Matrix {
          * The initial color of the Matrix canvas
          */
         color?: string,
+
+        /**
+         * The initial background color
+         */
+        backgroundColor?: string,
 
         /**
          * The initial symbols of the Matrix
@@ -153,6 +160,7 @@ module Matrix {
         if (settings) {
             if (settings.size) resize(settings.size.width, settings.size.height);
             if (settings.color) Settings.setColor(settings.color);
+            if (settings.backgroundColor) Settings.setBackgroundColor(settings.backgroundColor);
             if (settings.symbols) Settings.setSymbols(settings.symbols);
             if (settings.speed) Settings.setSpeed(settings.speed);
             if (settings.lineLength) Settings.setLineLength(settings.lineLength);
@@ -238,6 +246,22 @@ module Matrix {
          */
         export function getColor(): Color {
             return DEFAULT_FX.getColor();
+        }
+
+        /**
+         * Set the color of the background
+         *
+         * @param _backgroundColor The new background color
+         */
+        export function setBackgroundColor(_backgroundColor: Color = DEFAULT_BACKGROUND_COLOR): void {
+            DEFAULT_FX.setColor(_backgroundColor);
+        }
+
+        /**
+         * Get the current background color
+         */
+        export function getBackgroundColor(): Color {
+            return backgroundColor;
         }
 
         /**
@@ -476,6 +500,7 @@ module Matrix {
         let colorAccumulator = 0;
 
         let background: BGBuffer;
+        let backgroundColor: BGColorBuffer;
 
         function render_columns(delta: number) {
             if (columnsAccumulator >= 1000.0 / speed) {
@@ -552,6 +577,8 @@ module Matrix {
         }
 
         function render_background() {
+            backgroundColor.drawTo(ctx);
+
             ctx.globalAlpha = compositeAlpha;
 
             ctx.drawImage(background.html_canvas(), 0, 0);
@@ -615,6 +642,7 @@ module Matrix {
             }
 
             background = new BGBuffer();
+            backgroundColor = new BGColorBuffer();
 
             ctx.strokeStyle = '#000';
             ctx.fillStyle = '#000';
@@ -681,6 +709,29 @@ module Matrix {
                     }
                 }
             }
+
+        }
+
+        /**
+         * This renders the background color
+         */
+        class BGColorBuffer extends Utility.Buffer {
+
+            constructor() {
+                super({ width: 1, height: 1, allowResize: false });
+
+                this.ctx.fillStyle = DEFAULT_BACKGROUND_COLOR;
+            }
+
+            public setColor(_color: string) {
+                this.ctx.fillStyle = _color;
+
+                this.ctx.fillRect(0, 0, 1, 1);
+            }
+
+            public on_resize(): void { }
+
+            public draw(): void { }
 
         }
 
