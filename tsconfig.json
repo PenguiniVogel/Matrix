@@ -6,6 +6,6 @@
   },
   "files": [
     "script.ts",
-    "examples/shared/Resize.ts"
+    "sources/build/matrix.d.ts"
   ]
 }

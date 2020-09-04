@@ -200,8 +200,8 @@ module MatrixFX {
      * The default FX, renders a simple {@link Matrix.Settings.Color Color}
      */
     export const BUILTIN_FX_COLOR: FX & {
-        setColor: (_color: Matrix.Settings.Color) => void,
-        getColor: () => Matrix.Settings.Color
+        setColor(_color: Matrix.Settings.Color): void,
+        getColor(): Matrix.Settings.Color
     } = new BasicColorFX();
 
     /**

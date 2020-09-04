@@ -6,9 +6,11 @@
  file that was distributed with this source code.
  */
 
-///<reference path="sources/build/matrix.d.ts"/>
-
-Matrix.create('#matrix-canvas', {
+Matrix.create('#matrix-container', {
+    size: {
+        width: `${window.innerWidth}px`,
+        height: `${window.innerHeight}px`
+    },
     color: '#5bb9ff',
     speed: 16,
     updateRateFX: 16,
@@ -185,5 +187,7 @@ createSelectSetting(
 );
 
 // Matrix.debug_fx();
+
+window.addEventListener('resize', () => Matrix.resizeContainer(`${window.innerWidth}px`, `${window.innerHeight}px`));
 
 Matrix.start();

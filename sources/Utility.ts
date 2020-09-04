@@ -5,10 +5,67 @@
  For the full copyright and license information, please view the LICENSE
  file that was distributed with this source code.
  */
+/** */
 module Utility {
+
+    // --- OverlayMode
+
+    /**
+     * The overlay mode for the foreground overlay render
+     */
+    export const enum OverlayMode {
+
+        /**
+         * Overlay the entire canvas
+         */
+        FULL,
+
+        /**
+         * Overlay only old letters (default)
+         */
+        NORMAL,
+
+        /**
+         * Don't render the overlay
+         */
+        NONE
+
+    }
+
+    // --- LetterMutationMode
+
+    /**
+     * The mutation modes for letters
+     */
+    export const enum LetterMutationMode {
+
+        /**
+         * There will always be a new letter at the end and the previous ones will get shifted
+         */
+        NORMAL,
+
+        /**
+         * Randomly mutate a letter in an segment
+         */
+        RANDOM,
+
+        /**
+         * A combination of first {@link NORMAL} and then {@link RANDOM}
+         */
+        BOTH,
+
+        /**
+         * Don't mutate letters
+         */
+        NONE
+
+    }
 
     // --- Drawing Mode
 
+    /**
+     * Contains all possible graphical composite methods for {@link CanvasRenderingContext2D.globalCompositeOperation}
+     */
     export const enum DrawingMode {
 
         /**

@@ -263,8 +263,8 @@ declare module MatrixFX {
      * The default FX, renders a simple {@link Matrix.Settings.Color Color}
      */
     const BUILTIN_FX_COLOR: FX & {
-        setColor: (_color: Matrix.Settings.Color) => void;
-        getColor: () => Matrix.Settings.Color;
+        setColor(_color: Matrix.Settings.Color): void;
+        getColor(): Matrix.Settings.Color;
     };
     /**
      * Renders a left to right moving rainbow gradient
@@ -283,16 +283,15 @@ declare module MatrixFX {
  file that was distributed with this source code.
  */
 declare module Matrix {
-    const DEFAULT_SIZE = 300;
     const DEFAULT_COLOR = "#44ff00";
-    const DEFAULT_BACKGROUND_COLOR = "#000";
+    const DEFAULT_BACKGROUND_COLOR: Settings.Color;
     const DEFAULT_SYMBOLS = "\uFF66\uFF71\uFF73\uFF74\uFF75\uFF76\uFF77\uFF79\uFF7A\uFF7B\uFF7C\uFF7D\uFF7E\uFF7F\uFF80\uFF82\uFF83\uFF85\uFF86\uFF87\uFF88\uFF8A\uFF8B\uFF8E\uFF8F\uFF90\uFF91\uFF92\uFF93\uFF94\uFF95\uFF97\uFF98\uFF9C\u65E5(+*;)-|2589Z";
     const DEFAULT_SPEED = 1;
     const DEFAULT_LINE_LENGTH = 16;
     const DEFAULT_UPDATE_RATE_FX = 32;
     const DEFAULT_FX: MatrixFX.FX & {
-        setColor: (_color: string | CanvasGradient | CanvasPattern) => void;
-        getColor: () => string | CanvasGradient | CanvasPattern;
+        setColor(_color: string | CanvasGradient | CanvasPattern): void;
+        getColor(): string | CanvasGradient | CanvasPattern;
     };
     const DEFAULT_COMPOSITE_ALPHA = 0.3;
     const DEFAULT_MOVE_CHANCE = 0.51;
@@ -303,11 +302,17 @@ declare module Matrix {
     const MAX_LINE_LENGTH = 32;
     interface OptionalSettings {
         /**
-         * The initial size of the Matrix canvas
+         * Set the initial container size
          */
         size?: {
-            width: number;
-            height: number;
+            /**
+             * The container css width
+             */
+            width: string;
+            /**
+             * The container css height
+             */
+            height: string;
         };
         /**
          * The initial color of the Matrix canvas
@@ -363,12 +368,21 @@ declare module Matrix {
      */
     function start(): void;
     /**
-     * Resize the Matrix canvas
-     *
-     * @param _width The new width
-     * @param _height The new height
+     * Resize the Matrix to the container dimensions
      */
-    function resize(_width?: number, _height?: number): void;
+    function resize(): void;
+    /**
+     * Resize the container element and the Matrix <br/>
+     * Note: This will set inline styles, be sure your site styles take that into account!
+     *
+     * @param _width The new css width
+     * @param _height The new css height
+     */
+    function resizeContainer(_width: string, _height: string): void;
+    /**
+     * Get the container element the Matrix is inside of
+     */
+    function getContainer(): HTMLElement;
     /**
      * This will cause the canvas to only render the FX and not composite the actual Matrix. <br />
      * Note: This option can only be enabled <b>before</b> the Matrix is started!
@@ -377,13 +391,13 @@ declare module Matrix {
     module Settings {
         type Color = string | CanvasGradient | CanvasPattern;
         /**
-         * Set the color of the default {@link MatrixFX.BasicColorFX FX}
+         * Set the color of the {@link MatrixFX.BUILTIN_FX_COLOR BUILTIN_FX_COLOR}
          *
          * @param _color The new color
          */
         function setColor(_color?: Color): void;
         /**
-         * Get the current default {@link MatrixFX.BasicColorFX FX} color
+         * Get the current {@link MatrixFX.BUILTIN_FX_COLOR BUILTIN_FX_COLOR} color
          */
         function getColor(): Color;
         /**

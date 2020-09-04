@@ -5,9 +5,6 @@
  For the full copyright and license information, please view the LICENSE
  file that was distributed with this source code.
  */
-
-///<reference path="../../sources/build/matrix.d.ts"/>
-
 module MonaLisaFX {
 
     let image: HTMLImageElement;
@@ -17,6 +14,8 @@ module MonaLisaFX {
             speed: 8,
             updateRateFX: 16
         });
+
+        window.addEventListener('resize', () => Matrix.resizeContainer(`${window.innerWidth}px`, `${window.innerHeight}px`));
 
         Matrix.start();
 
