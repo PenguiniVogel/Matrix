@@ -370,15 +370,7 @@ module Utility {
 
             this.canvas.width = width;
             this.canvas.height = height;
-
-            this.on_resize();
         }
-
-        /**
-         * This gets called upon a resize. <br/>
-         * Note: This will <b>not</b> get called if {@link allowResize} is <code>false</code>!
-         */
-        public abstract on_resize(): void;
 
         /**
          * This method gets called on every updateFX by the Matrix core. <br/>

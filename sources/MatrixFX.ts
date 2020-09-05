@@ -85,8 +85,6 @@ module MatrixFX {
             this.draw();
         }
 
-        public on_resize() { }
-
         public draw() {
             for (let x = 0; x < this.colCount; x ++) {
                 this.ctx.fillStyle = Utility.color_hsl(
@@ -108,91 +106,38 @@ module MatrixFX {
      */
     class BasicDiagonalFX extends FX {
 
-        // @internal
-        private colors: string[] = [
-            '#ff0000',
-            '#ff5500',
-            '#ffaa00',
-            '#ffff00',
-            '#aaff00',
-            '#55ff00',
-            '#00ff00',
-            '#00ff55',
-            '#00ffaa',
-            '#00ffff',
-            '#00aaff',
-            '#0055ff',
-            '#0000ff',
-            '#5500ff',
-            '#aa00ff',
-            '#ff00ff',
-            '#ff00aa',
-            '#ff0055'
-        ];
+        private readonly size = 22;
 
         // @internal
-        private colCount = 0;
+        private hueOffset = 0;
 
         // @internal
-        private rowCount = 0;
+        private colHue = 0;
 
-        // @internal
-        private yOffset = 0;
+        public resize(width: number, height: number) {
+            this.colHue = 360.0 / (width / Matrix.COLUMN_SIZE);
 
-        // @internal
-        public drawTo(targetContext: CanvasRenderingContext2D, width: number, height: number) {
-            // super.drawTo(targetContext);
-            if (this.yOffset >= this.rowCount) {
-                this.yOffset = 0;
-            }
+            this.canvas.width = this.size;
+            this.canvas.height = this.size;
 
-            this.yOffset --;
-
-            targetContext.drawImage(this.html_canvas(), 0, this.yOffset, width, height);
+            this.draw();
         }
 
-        public on_resize() {
-            this.colCount = this.width() / Matrix.COLUMN_SIZE;
-            this.rowCount = this.height() / Matrix.COLUMN_SIZE;
+        public draw() {
+            let gradient = this.ctx.createLinearGradient(0, 0, this.size, this.size);
+            for (let i = 0; i < 1.1; i += 0.1) {
+                gradient.addColorStop(Utility.fixFloat(i, 1e1), Utility.color_hsl(
+                    Utility.fixDegrees(this.hueOffset - (360.0 / 11) * (i * 10))
+                ));
+            }
 
-            this.canvas.width = this.colCount;
-            this.canvas.height = this.rowCount * 2;
+            this.ctx.fillStyle = gradient;
 
             this.ctx.beginPath();
-            this.ctx.clearRect(0, 0, this.colCount, this.rowCount * 2);
+            this.ctx.fillRect(0, 0, this.size, this.size);
 
-            let gradientBufferCanvas: HTMLCanvasElement = document.createElement('canvas');
-            let gradientBufferCtx: CanvasRenderingContext2D = gradientBufferCanvas.getContext('2d');
-
-            gradientBufferCanvas.width = this.colCount;
-            gradientBufferCanvas.height = this.rowCount;
-
-            let gradient = this.ctx.createLinearGradient(0, 0, this.colCount, this.rowCount);
-
-            gradient.addColorStop(0, this.colors[0]);
-
-            let gradientStep = 1.0 / (this.colors.length - 1);
-            let at = gradientStep;
-
-            for (let i = 1, l = this.colors.length; i < l; i ++) {
-                gradient.addColorStop(Math.min(1.0, at), this.colors[i]);
-
-                at += gradientStep;
-            }
-
-            gradient.addColorStop(1, this.colors[0]);
-
-            gradientBufferCtx.fillStyle = gradient;
-
-            gradientBufferCtx.beginPath();
-            gradientBufferCtx.fillRect(0, 0, this.colCount, this.rowCount);
-
-            this.ctx.drawImage(gradientBufferCanvas, 0, 0, this.colCount, this.rowCount);
-            this.ctx.drawImage(gradientBufferCanvas, this.colCount, this.rowCount, -this.colCount, this.rowCount);
+            this.hueOffset = Utility.fixDegrees(this.hueOffset + this.colHue);
         }
-
-        public draw() { }
-
     }
 
     // --- Builtin FX

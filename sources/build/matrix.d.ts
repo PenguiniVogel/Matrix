@@ -260,11 +260,6 @@ declare module Utility {
          */
         resize(width: number, height: number): void;
         /**
-         * This gets called upon a resize. <br/>
-         * Note: This will <b>not</b> get called if {@link allowResize} is <code>false</code>!
-         */
-        abstract on_resize(): void;
-        /**
          * This method gets called on every updateFX by the Matrix core. <br/>
          * Remember, please optimize and move everything that only has to / can happen on a resize to {@link on_resize}
          */
