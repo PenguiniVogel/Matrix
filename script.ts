@@ -7,14 +7,8 @@
  */
 
 Matrix.create('#matrix-container', {
-    size: {
-        width: `${window.innerWidth}px`,
-        height: `${window.innerHeight}px`
-    },
-    color: '#5bb9ff',
-    speed: 16,
-    updateRateFX: 16,
-    fx: MatrixFX.BUILTIN_FX_COLOR
+    width: `${window.innerWidth}px`,
+    height: `${window.innerHeight}px`
 });
 
 import Settings = Matrix.Settings;
@@ -166,7 +160,7 @@ createSetting(
 // );
 
 createSelectSetting(
-    'fxlist',
+    'fxList',
     [
         {
             title: 'Basic Color FX',
@@ -184,6 +178,91 @@ createSelectSetting(
     ],
     'FX List:',
     'Included FXs'
+);
+
+createSetting(
+    'compositeAlpha',
+    'range',
+    `${Settings.getCompositeAlpha() * 100}`,
+    'Composite Alpha:',
+    'Set the composite alpha',
+    (val: number) => Settings.setCompositeAlpha(val / 100.0),
+    (val: number) => `${val / 100.0}`
+);
+
+createSetting(
+    'compositeMutation',
+    'checkbox',
+    `${Settings.getCompositeMutation()}`,
+    'Composite Mutation:',
+    'Whether composite alpha should be applied to the letter mutation',
+    (val: boolean) => Settings.setCompositeMutation(val)
+);
+
+createSetting(
+    'moveChance',
+    'range',
+    `${Settings.getMoveChance() * 100}`,
+    'Move Chance:',
+    'Set the move chance',
+    (val: number) => Settings.setMoveChance(val / 100.0),
+    (val: number) => `${val / 100.0}`
+);
+
+createSetting(
+    'mutationChance',
+    'range',
+    `${Settings.getMutationChance() * 100}`,
+    'Mutation Chance:',
+    'Set the mutation chance',
+    (val: number) => Settings.setMutationChance(val / 100.0),
+    (val: number) => `${val / 100.0}`
+);
+
+createSelectSetting(
+    'overlayModeList',
+    [
+        {
+            title: 'Full',
+            onselect: () => Settings.setOverlayMode(Utility.OverlayMode.FULL)
+        },
+        {
+            title: 'Normal',
+            onselect: () => Settings.setOverlayMode(Utility.OverlayMode.NORMAL),
+            selected: true
+        },
+        {
+            title: 'None',
+            onselect: () => Settings.setOverlayMode(Utility.OverlayMode.NONE)
+        }
+    ],
+    'Overlay Mode:',
+    'Set the overlay mode'
+);
+
+createSelectSetting(
+    'mutationModeList',
+    [
+        {
+            title: 'Normal',
+            onselect: () => Settings.setLetterMutationMode(Utility.LetterMutationMode.NORMAL),
+            selected: true
+        },
+        {
+            title: 'Random',
+            onselect: () => Settings.setLetterMutationMode(Utility.LetterMutationMode.RANDOM)
+        },
+        {
+            title: 'Both',
+            onselect: () => Settings.setLetterMutationMode(Utility.LetterMutationMode.BOTH)
+        },
+        {
+            title: 'None',
+            onselect: () => Settings.setLetterMutationMode(Utility.LetterMutationMode.NONE)
+        }
+    ],
+    'Mutation Mode:',
+    'Set the letter mutation mode'
 );
 
 // Matrix.debug_fx();

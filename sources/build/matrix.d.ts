@@ -5,7 +5,49 @@
  For the full copyright and license information, please view the LICENSE
  file that was distributed with this source code.
  */
+/** */
 declare module Utility {
+    /**
+     * The overlay mode for the foreground overlay render
+     */
+    const enum OverlayMode {
+        /**
+         * Overlay the entire canvas
+         */
+        FULL = 0,
+        /**
+         * Overlay only old letters (default)
+         */
+        NORMAL = 1,
+        /**
+         * Don't render the overlay
+         */
+        NONE = 2
+    }
+    /**
+     * The mutation modes for letters
+     */
+    const enum LetterMutationMode {
+        /**
+         * There will always be a new letter at the end and the previous ones will get shifted
+         */
+        NORMAL = 0,
+        /**
+         * Randomly mutate a letter in an segment
+         */
+        RANDOM = 1,
+        /**
+         * A combination of first {@link NORMAL} and then {@link RANDOM}
+         */
+        BOTH = 2,
+        /**
+         * Don't mutate letters
+         */
+        NONE = 3
+    }
+    /**
+     * Contains all possible graphical composite methods for {@link CanvasRenderingContext2D.globalCompositeOperation}
+     */
     const enum DrawingMode {
         /**
          * Draw new content on top of existing content
@@ -233,8 +275,10 @@ declare module Utility {
          * meaning it will get stretched to the size of the target canvas!
          *
          * @param targetContext The target {@link CanvasRenderingContext2D context}
+         * @param width The target canvas width
+         * @param height The target canvas height
          */
-        drawTo(targetContext: CanvasRenderingContext2D): void;
+        drawTo(targetContext: CanvasRenderingContext2D, width: number, height: number): void;
     }
 }
 /**
@@ -282,11 +326,12 @@ declare module MatrixFX {
  For the full copyright and license information, please view the LICENSE
  file that was distributed with this source code.
  */
+/** */
 declare module Matrix {
     const DEFAULT_COLOR = "#44ff00";
     const DEFAULT_BACKGROUND_COLOR: Settings.Color;
     const DEFAULT_SYMBOLS = "\uFF66\uFF71\uFF73\uFF74\uFF75\uFF76\uFF77\uFF79\uFF7A\uFF7B\uFF7C\uFF7D\uFF7E\uFF7F\uFF80\uFF82\uFF83\uFF85\uFF86\uFF87\uFF88\uFF8A\uFF8B\uFF8E\uFF8F\uFF90\uFF91\uFF92\uFF93\uFF94\uFF95\uFF97\uFF98\uFF9C\u65E5(+*;)-|2589Z";
-    const DEFAULT_SPEED = 1;
+    const DEFAULT_SPEED = 16;
     const DEFAULT_LINE_LENGTH = 16;
     const DEFAULT_UPDATE_RATE_FX = 32;
     const DEFAULT_FX: MatrixFX.FX & {
@@ -294,75 +339,26 @@ declare module Matrix {
         getColor(): string | CanvasGradient | CanvasPattern;
     };
     const DEFAULT_COMPOSITE_ALPHA = 0.3;
+    const DEFAULT_COMPOSITE_MUTATION = true;
     const DEFAULT_MOVE_CHANCE = 0.51;
     const DEFAULT_WAIT_TIME = 20;
     const DEFAULT_MUTATION_CHANCE = 0.1;
+    const DEFAULT_OVERLAY_MODE = Utility.OverlayMode.NORMAL;
+    const DEFAULT_LETTER_MUTATION_MODE = Utility.LetterMutationMode.NORMAL;
     const COLUMN_SIZE = 12;
     const MAX_SPEED = 32;
     const MAX_LINE_LENGTH = 32;
-    interface OptionalSettings {
-        /**
-         * Set the initial container size
-         */
-        size?: {
-            /**
-             * The container css width
-             */
-            width: string;
-            /**
-             * The container css height
-             */
-            height: string;
-        };
-        /**
-         * The initial color of the Matrix canvas
-         */
-        color?: string;
-        /**
-         * The initial background color
-         */
-        backgroundColor?: string;
-        /**
-         * The initial symbols of the Matrix
-         */
-        symbols?: string;
-        /**
-         * The initial speed of the columns
-         */
-        speed?: number;
-        /**
-         * The initial length of an column segment
-         */
-        lineLength?: number;
-        /**
-         * The initial update rate of the FX
-         */
-        updateRateFX?: number;
-        /**
-         * The initial {@link MatrixFX.FX} to use
-         */
-        fx?: MatrixFX.FX;
-        /**
-         * The initial composite alpha for the Matrix canvas
-         */
-        compositeAlpha?: number;
-        /**
-         * The initial move chance of an column
-         */
-        moveChance?: number;
-        /**
-         * The initial mutation chance of an letter in a column segment
-         */
-        mutationChance?: number;
-    }
     /**
      * Create the Matrix onto the specified selector. <br/>
      * Note: The selector must match and return a &lt;canvas&gt; element!
      *
      * @param selector The dom selector
-     * @param settings {@link Matrix.OptionalSettings}
+     * @param size The initial container size
      */
-    function create(selector: string, settings?: OptionalSettings): void;
+    function create(selector: string, size?: {
+        width: string;
+        height: string;
+    }): void;
     /**
      * Start the Matrix
      */
@@ -388,6 +384,10 @@ declare module Matrix {
      * Note: This option can only be enabled <b>before</b> the Matrix is started!
      */
     function debug_fx(): void;
+    /**
+     * Contains all the changeable settings for Matrix
+     */
+    /** */
     module Settings {
         type Color = string | CanvasGradient | CanvasPattern;
         /**
@@ -471,6 +471,16 @@ declare module Matrix {
          */
         function getCompositeAlpha(): number;
         /**
+         * Set whether the letter mutation should use the defined composite alpha
+         *
+         * @param _compositeMutation Whether letter mutation should use composite alpha
+         */
+        function setCompositeMutation(_compositeMutation: boolean): void;
+        /**
+         * Does letter mutation use the composite alpha
+         */
+        function getCompositeMutation(): boolean;
+        /**
          * Set the move chance of the Matrix columns
          *
          * @param _chance The new move chance (0.0 - 1.0)
@@ -481,7 +491,9 @@ declare module Matrix {
          */
         function getMoveChance(): number;
         /**
-         * Set the mutation chance of a letter in a column segment
+         * Set the mutation chance of a letter in a column segment <br />
+         * Only effective if {@link getLetterMutationMode getLetterMutationMode()} is
+         * {@link Utility.LetterMutationMode.RANDOM LetterMutationMode.RANDOM} or {@link Utility.LetterMutationMode.BOTH LetterMutationMode.BOTH}
          *
          * @param _chance The new mutation chance (0.0 - 1.0)
          */
@@ -490,5 +502,25 @@ declare module Matrix {
          * Get the current mutation chance of a letter in a column segment
          */
         function getMutationChance(): number;
+        /**
+         * Set the foreground {@link Utility.OverlayMode OverlayMode}
+         *
+         * @param _overlayMode The new {@link Utility.OverlayMode OverlayMode}
+         */
+        function setOverlayMode(_overlayMode?: Utility.OverlayMode): void;
+        /**
+         * Get the current foreground {@link Utility.OverlayMode OverlayMode}
+         */
+        function getOverlayMode(): Utility.OverlayMode;
+        /**
+         * Set the {@link Utility.LetterMutationMode LetterMutationMode}
+         *
+         * @param _letterMutationMode The new {@link Utility.LetterMutationMode LetterMutationMode}
+         */
+        function setLetterMutationMode(_letterMutationMode?: Utility.LetterMutationMode): void;
+        /**
+         * Get the current {@link Utility.LetterMutationMode LetterMutationMode}
+         */
+        function getLetterMutationMode(): Utility.LetterMutationMode;
     }
 }

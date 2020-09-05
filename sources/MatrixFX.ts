@@ -75,17 +75,17 @@ module MatrixFX {
         // @internal
         private colHue = 0;
 
-        // @internal
-        public drawTo(targetContext: CanvasRenderingContext2D) {
-            // super.drawTo(targetContext);
-            targetContext.drawImage(this.html_canvas(), 0, 0, targetContext.canvas.width, targetContext.canvas.height);
-        }
+        public resize(width: number, height: number) {
+            this.colCount = Math.ceil(width / Matrix.COLUMN_SIZE);
+            this.colHue = 360.0 / this.colCount;
 
-        public on_resize() {
-            this.colCount = this.width() / Matrix.COLUMN_SIZE;
+            this.canvas.width = this.colCount;
+            this.canvas.height = 1;
 
             this.draw();
         }
+
+        public on_resize() { }
 
         public draw() {
             for (let x = 0; x < this.colCount; x ++) {
@@ -93,6 +93,7 @@ module MatrixFX {
                     Utility.fixDegrees(this.hueOffset - this.colHue * x)
                 );
 
+                this.ctx.beginPath();
                 this.ctx.fillRect(x, 0, 1, 1);
             }
 
@@ -139,15 +140,15 @@ module MatrixFX {
         private yOffset = 0;
 
         // @internal
-        public drawTo(targetContext: CanvasRenderingContext2D) {
+        public drawTo(targetContext: CanvasRenderingContext2D, width: number, height: number) {
             // super.drawTo(targetContext);
             if (this.yOffset >= this.rowCount) {
                 this.yOffset = 0;
             }
 
-            this.yOffset ++;
+            this.yOffset --;
 
-            targetContext.drawImage(this.html_canvas(), 0, this.yOffset, targetContext.canvas.width, targetContext.canvas.height);
+            targetContext.drawImage(this.html_canvas(), 0, this.yOffset, width, height);
         }
 
         public on_resize() {

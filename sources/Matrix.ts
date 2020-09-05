@@ -11,11 +11,12 @@ module Matrix {
     export const DEFAULT_COLOR = '#44ff00';
     export const DEFAULT_BACKGROUND_COLOR: Settings.Color = '#000';
     export const DEFAULT_SYMBOLS = 'ｦｱｳｴｵｶｷｹｺｻｼｽｾｿﾀﾂﾃﾅﾆﾇﾈﾊﾋﾎﾏﾐﾑﾒﾓﾔﾕﾗﾘﾜ日(+*;)-|2589Z';
-    export const DEFAULT_SPEED = 1;
+    export const DEFAULT_SPEED = 16;
     export const DEFAULT_LINE_LENGTH = 16;
     export const DEFAULT_UPDATE_RATE_FX = 32;
     export const DEFAULT_FX = MatrixFX.BUILTIN_FX_COLOR;
     export const DEFAULT_COMPOSITE_ALPHA = 0.3;
+    export const DEFAULT_COMPOSITE_MUTATION = true;
     export const DEFAULT_MOVE_CHANCE = 0.51;
     export const DEFAULT_WAIT_TIME = 20;
     export const DEFAULT_MUTATION_CHANCE = 0.1;
@@ -69,6 +70,7 @@ module Matrix {
     let fx: MatrixFX.FX = DEFAULT_FX;
 
     let compositeAlpha: number = DEFAULT_COMPOSITE_ALPHA;
+    let compositeMutation: boolean = DEFAULT_COMPOSITE_MUTATION;
 
     let moveChance: number = DEFAULT_MOVE_CHANCE;
     let mutationChance: number = DEFAULT_MUTATION_CHANCE;
@@ -311,7 +313,7 @@ module Matrix {
     /** */
     export module Settings {
 
-        function checkCreated(settingName: string) {
+        function checkCreated(settingName: string): void {
             if (!created) throw new Error(`Cannot set setting "${settingName}" before creation!`);
         }
 
@@ -322,10 +324,10 @@ module Matrix {
          *
          * @param _color The new color
          */
-        export function setColor(_color: Color = DEFAULT_COLOR): Settings {
+        export function setColor(_color: Color = DEFAULT_COLOR): void {
             DEFAULT_FX.setColor(_color);
 
-            return Settings;
+            return this;
         }
 
         /**
@@ -340,7 +342,7 @@ module Matrix {
          *
          * @param _backgroundColor The new background color
          */
-        export function setBackgroundColor(_backgroundColor: Color = DEFAULT_BACKGROUND_COLOR): Settings {
+        export function setBackgroundColor(_backgroundColor: Color = DEFAULT_BACKGROUND_COLOR): void {
             backgroundColor = _backgroundColor;
 
             bgCtx.fillStyle = backgroundColor;
@@ -350,7 +352,7 @@ module Matrix {
 
             fgCtx.fillStyle = backgroundColor;
 
-            return Settings;
+            return this;
         }
 
         /**
@@ -365,14 +367,12 @@ module Matrix {
          *
          * @param _symbols The new symbols
          */
-        export function setSymbols(_symbols: string = DEFAULT_SYMBOLS): Settings {
+        export function setSymbols(_symbols: string = DEFAULT_SYMBOLS): void {
             checkCreated('symbols');
 
             convertSymbols(_symbols);
 
             RenderEngine.recalculate_columns();
-
-            return Settings;
         }
 
         /**
@@ -387,12 +387,10 @@ module Matrix {
          *
          * @param _speed The new speed
          */
-        export function setSpeed(_speed: number = DEFAULT_SPEED): Settings {
+        export function setSpeed(_speed: number = DEFAULT_SPEED): void {
             if (_speed < 1 || _speed > MAX_SPEED) _speed = DEFAULT_SPEED;
 
             speed = _speed;
-
-            return Settings;
         }
 
         /**
@@ -407,12 +405,10 @@ module Matrix {
          *
          * @param _lineLength The new <b>max</b> line length
          */
-        export function setLineLength(_lineLength: number = DEFAULT_LINE_LENGTH): Settings {
+        export function setLineLength(_lineLength: number = DEFAULT_LINE_LENGTH): void {
             if (_lineLength < 1 || _lineLength > MAX_LINE_LENGTH) _lineLength = DEFAULT_LINE_LENGTH;
 
             lineLength = _lineLength;
-
-            return Settings;
         }
 
         /**
@@ -443,12 +439,10 @@ module Matrix {
          *
          * @param _ups The new FX update rate
          */
-        export function setUpdateRateFX(_ups: number = DEFAULT_UPDATE_RATE_FX): Settings {
+        export function setUpdateRateFX(_ups: number = DEFAULT_UPDATE_RATE_FX): void {
             if (_ups < 1) _ups = DEFAULT_UPDATE_RATE_FX;
 
             upsFX = _ups;
-
-            return Settings;
         }
 
         /**
@@ -479,14 +473,12 @@ module Matrix {
          *
          * @param _fx The new {@link MatrixFX.FX}
          */
-        export function setFX(_fx: MatrixFX.FX = DEFAULT_FX): Settings {
+        export function setFX(_fx: MatrixFX.FX = DEFAULT_FX): void {
             checkCreated('fx');
 
             fx = _fx;
 
             fx.resize(width, height);
-
-            return Settings;
         }
 
         /**
@@ -501,12 +493,10 @@ module Matrix {
          *
          * @param _alpha The new composite alpha
          */
-        export function setCompositeAlpha(_alpha: number = DEFAULT_COMPOSITE_ALPHA): Settings {
+        export function setCompositeAlpha(_alpha: number = DEFAULT_COMPOSITE_ALPHA): void {
             compositeAlpha = _alpha;
 
             fgCtx.globalAlpha = compositeAlpha;
-
-            return Settings;
         }
 
         /**
@@ -517,14 +507,28 @@ module Matrix {
         }
 
         /**
+         * Set whether the letter mutation should use the defined composite alpha
+         *
+         * @param _compositeMutation Whether letter mutation should use composite alpha
+         */
+        export function setCompositeMutation(_compositeMutation: boolean): void {
+            compositeMutation = _compositeMutation;
+        }
+
+        /**
+         * Does letter mutation use the composite alpha
+         */
+        export function getCompositeMutation(): boolean {
+            return compositeMutation;
+        }
+
+        /**
          * Set the move chance of the Matrix columns
          *
          * @param _chance The new move chance (0.0 - 1.0)
          */
-        export function setMoveChance(_chance: number = DEFAULT_MOVE_CHANCE): Settings {
+        export function setMoveChance(_chance: number = DEFAULT_MOVE_CHANCE): void {
             moveChance = _chance;
-
-            return Settings;
         }
 
         /**
@@ -535,14 +539,14 @@ module Matrix {
         }
 
         /**
-         * Set the mutation chance of a letter in a column segment
+         * Set the mutation chance of a letter in a column segment <br />
+         * Only effective if {@link getLetterMutationMode getLetterMutationMode()} is
+         * {@link Utility.LetterMutationMode.RANDOM LetterMutationMode.RANDOM} or {@link Utility.LetterMutationMode.BOTH LetterMutationMode.BOTH}
          *
          * @param _chance The new mutation chance (0.0 - 1.0)
          */
-        export function setMutationChance(_chance: number = DEFAULT_MUTATION_CHANCE): Settings {
+        export function setMutationChance(_chance: number = DEFAULT_MUTATION_CHANCE): void {
             mutationChance = _chance;
-
-            return Settings;
         }
 
         /**
@@ -553,30 +557,33 @@ module Matrix {
         }
 
         /**
-         * Set the foreground overlay mode
+         * Set the foreground {@link Utility.OverlayMode OverlayMode}
          *
-         * @param _overlayMode The new overlay mode
+         * @param _overlayMode The new {@link Utility.OverlayMode OverlayMode}
          */
-        export function setOverlayMode(_overlayMode: Utility.OverlayMode = DEFAULT_OVERLAY_MODE): Settings {
+        export function setOverlayMode(_overlayMode: Utility.OverlayMode = DEFAULT_OVERLAY_MODE): void {
             overlayMode = _overlayMode;
-
-            // TODO
-
-            return Settings;
         }
 
+        /**
+         * Get the current foreground {@link Utility.OverlayMode OverlayMode}
+         */
         export function getOverlayMode(): Utility.OverlayMode {
             return overlayMode;
         }
 
-        export function setLetterMutationMode(_letterMutationMode: Utility.LetterMutationMode = DEFAULT_LETTER_MUTATION_MODE): Settings {
+        /**
+         * Set the {@link Utility.LetterMutationMode LetterMutationMode}
+         *
+         * @param _letterMutationMode The new {@link Utility.LetterMutationMode LetterMutationMode}
+         */
+        export function setLetterMutationMode(_letterMutationMode: Utility.LetterMutationMode = DEFAULT_LETTER_MUTATION_MODE): void {
             letterMutationMode = _letterMutationMode;
-
-            // TODO
-
-            return Settings;
         }
 
+        /**
+         * Get the current {@link Utility.LetterMutationMode LetterMutationMode}
+         */
         export function getLetterMutationMode(): Utility.LetterMutationMode {
             return letterMutationMode;
         }
@@ -694,20 +701,28 @@ module Matrix {
                             }
                         }
 
+                        if ((letterMutationMode == Utility.LetterMutationMode.NORMAL || letterMutationMode == Utility.LetterMutationMode.BOTH) &&
+                            l_Segment.letters.length > 1
+                        ) {
+                            l_Segment.letters.shift();
+                            l_Segment.letters.push(random_char());
+                        }
+
                         for (let i = 0, l = l_Segment.letters.length; i < l; i ++) {
-                            let letter = l_Segment.letters[i];
-                            // chance that letter gets changed
-                            if (!changedLetter && Math.random() < mutationChance) {
+                            let mutate = !changedLetter &&
+                                (letterMutationMode == Utility.LetterMutationMode.RANDOM || letterMutationMode == Utility.LetterMutationMode.BOTH) &&
+                                Math.random() < mutationChance;
+
+                            if (mutate) {
                                 changedLetter = true;
 
-                                letter = random_char();
-                                l_Segment.letters[i] = letter;
+                                l_Segment.letters[i] = random_char();
 
                                 paint_letter_mutation(l_Column.x, l_Segment.y + COLUMN_SIZE * i);
                             } else {
-                                paint_letter(letter, l_Column.x, l_Segment.y + COLUMN_SIZE * i);
+                                paint_letter(l_Segment.letters[i], l_Column.x, l_Segment.y + COLUMN_SIZE * i);
 
-                                if (i + 1 < l) {
+                                if (overlayMode == Utility.OverlayMode.NORMAL && i + 1 < l) {
                                     fgCtx.beginPath();
                                     fgCtx.fillRect(l_Column.x, l_Segment.y - 8 + COLUMN_SIZE * i, COLUMN_SIZE, COLUMN_SIZE);
                                 }
@@ -720,6 +735,11 @@ module Matrix {
                     }
 
                     l_Column.segments = l_Column.segments.filter(segment => segment.y - (COLUMN_SIZE * segment.length) < height);
+                }
+
+                if (overlayMode == Utility.OverlayMode.FULL) {
+                    fgCtx.beginPath();
+                    fgCtx.fillRect(0, 0, width, height);
                 }
 
                 columnsAccumulator = 0;
@@ -743,7 +763,7 @@ module Matrix {
                 colorAccumulator = 0;
             }
 
-            fx.drawTo(ctx);
+            fx.drawTo(ctx, width, height);
 
             ctx.globalCompositeOperation = Utility.DrawingMode.SOURCE_OVER;
         }
@@ -829,10 +849,10 @@ module Matrix {
             // ctx.beginPath();
             ctx.clearRect(x, y, COLUMN_SIZE, COLUMN_SIZE);
 
-            ctx.globalAlpha = 0.3;
+            ctx.globalAlpha = compositeMutation ? compositeAlpha : 1.0;
 
             ctx.beginPath();
-            ctx.fillRect(x + 3, y + 1, COLUMN_SIZE - 6, COLUMN_SIZE - 2);
+            ctx.fillRect(x + 2, y - 8, COLUMN_SIZE - 4, COLUMN_SIZE);
 
             ctx.globalAlpha = 1.0;
         }

@@ -392,9 +392,11 @@ module Utility {
          * meaning it will get stretched to the size of the target canvas!
          *
          * @param targetContext The target {@link CanvasRenderingContext2D context}
+         * @param width The target canvas width
+         * @param height The target canvas height
          */
-        public drawTo(targetContext: CanvasRenderingContext2D): void {
-            targetContext.drawImage(this.html_canvas(), 0, 0, targetContext.canvas.width, targetContext.canvas.height);
+        public drawTo(targetContext: CanvasRenderingContext2D, width: number, height: number): void {
+            targetContext.drawImage(this.html_canvas(), 0, 0, width, height);
         }
 
     }

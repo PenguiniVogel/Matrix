@@ -10,12 +10,12 @@ module MonaLisaFX {
     let image: HTMLImageElement;
 
     export function load() {
-        Matrix.create('#matrix-canvas', {
-            speed: 8,
-            updateRateFX: 16
-        });
+        Matrix.create('#matrix-canvas');
 
         window.addEventListener('resize', () => Matrix.resizeContainer(`${window.innerWidth}px`, `${window.innerHeight}px`));
+
+        Matrix.Settings.setSpeed(8);
+        Matrix.Settings.setUpdateRateFX(16);
 
         Matrix.start();
 

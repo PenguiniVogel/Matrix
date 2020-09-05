@@ -40,7 +40,7 @@ file that was distributed with this source code.
             border-bottom: 1px solid #000;
             padding-bottom: 2px;
             display: grid;
-            grid-template-columns: 70px 150px;
+            grid-template-columns: 150px 150px;
             grid-template-rows: var(--container-set-height) var(--container-set-height) 2px;
         }
 
@@ -58,6 +58,7 @@ file that was distributed with this source code.
             border-radius: 15mm;
             cursor: pointer;
             transition: color ease-in 0.2s, background-color ease-in 0.2s;
+            margin-right: 50px;
         }
 
         #options container a:hover {
@@ -67,14 +68,6 @@ file that was distributed with this source code.
 
         #options container label {
             font-size: 12px;
-        }
-
-        #debug-canvas {
-            z-index: 2;
-            position: absolute;
-            top: 0;
-            right: 0;
-            left: 250px;
         }
 
         #matrix-container {
@@ -94,7 +87,6 @@ file that was distributed with this source code.
     <div id="matrix-container"></div>
 
     <div id="options" style="display: grid;"></div>
-    <canvas id="debug-canvas"></canvas>
 
     <script src="sources/build/matrix.min.js"></script>
     <script src="script.min.js"></script>
