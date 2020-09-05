@@ -204,6 +204,8 @@ module Matrix {
 
         if (size) {
             resizeContainer(size.width, size.height);
+        } else {
+            resize();
         }
         // if (settings) {
         //     if (settings.size) resizeContainer(settings.size.width, settings.size.height);
@@ -871,7 +873,9 @@ module Matrix {
                 this.ctx.fillStyle = '#000';
             }
 
-            public on_resize(): void {
+            resize(width: number, height: number) {
+                super.resize(width, height);
+
                 this.draw();
             }
 

@@ -10,12 +10,14 @@ module MonaLisaFX {
     let image: HTMLImageElement;
 
     export function load() {
-        Matrix.create('#matrix-canvas');
+        Matrix.create('#matrix-container');
 
         window.addEventListener('resize', () => Matrix.resizeContainer(`${window.innerWidth}px`, `${window.innerHeight}px`));
 
         Matrix.Settings.setSpeed(8);
         Matrix.Settings.setUpdateRateFX(16);
+        Matrix.Settings.setOverlayMode(Utility.OverlayMode.NONE);
+        Matrix.Settings.setBackgroundColor('#aeaeae');
 
         Matrix.start();
 
@@ -35,7 +37,9 @@ module MonaLisaFX {
             super();
         }
 
-        public on_resize() {
+        resize(width: number, height: number) {
+            super.resize(width, height);
+
             this.ctx.beginPath();
             this.ctx.drawImage(image, 0, 0, this.width(), this.height());
         }
