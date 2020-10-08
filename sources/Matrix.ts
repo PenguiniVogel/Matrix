@@ -37,6 +37,9 @@ module Matrix {
 
     let container: HTMLElement;
 
+    let targetCanvas: HTMLCanvasElement;
+    let targetCanvasCtx: CanvasRenderingContext2D;
+
     let fgCanvas: HTMLCanvasElement;
     let fgCtx: CanvasRenderingContext2D;
 
@@ -181,17 +184,21 @@ module Matrix {
 
         container.style.overflow = 'hidden';
 
+        targetCanvas = document.createElement('canvas');
+        targetCanvasCtx = targetCanvas.getContext('2d');
+
         fgCanvas = document.createElement('canvas');
         canvas = document.createElement('canvas');
         bgCanvas = document.createElement('canvas');
 
         let generalStyles = 'position: absolute;';
 
-        fgCanvas.setAttribute('style', `z-index: 3; ${generalStyles}`);
-        canvas.setAttribute('style', `z-index: 2; ${generalStyles}`);
-        bgCanvas.setAttribute('style', `z-index: 1; ${generalStyles}`);
+        // fgCanvas.setAttribute('style', `z-index: 3; ${generalStyles}`);
+        // canvas.setAttribute('style', `z-index: 2; ${generalStyles}`);
+        // bgCanvas.setAttribute('style', `z-index: 1; ${generalStyles}`);
 
-        container.append(fgCanvas, canvas, bgCanvas);
+        // container.append(fgCanvas, canvas, bgCanvas);
+        container.append(targetCanvas);
 
         fgCtx = fgCanvas.getContext('2d');
         ctx = canvas.getContext('2d');
@@ -255,6 +262,9 @@ module Matrix {
 
         width = container.clientWidth;
         height = container.clientHeight;
+
+        targetCanvas.width = width;
+        targetCanvas.height = height;
 
         fgCanvas.width = width;
         fgCanvas.height = height;
@@ -778,6 +788,10 @@ module Matrix {
             colorAccumulator += delta;
 
             render_composite_color(/* delta */);
+
+            targetCanvasCtx.drawImage(bgCanvas, 0, 0);
+            targetCanvasCtx.drawImage(canvas, 0, 0);
+            targetCanvasCtx.drawImage(fgCanvas, 0, 0);
         }
 
         function render_process_debugFX(delta: number): void {
