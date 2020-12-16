@@ -15,7 +15,7 @@ module MonaLisaFX {
         window.addEventListener('resize', () => Matrix.resizeContainer(`${window.innerWidth}px`, `${window.innerHeight}px`));
 
         Matrix.Settings.setSpeed(8);
-        Matrix.Settings.setUpdateRateFX(16);
+        Matrix.Settings.setUpdateRate(16);
         Matrix.Settings.setOverlayMode(Utility.OverlayMode.NONE);
         Matrix.Settings.setBackgroundColor('#aeaeae');
 

@@ -26,6 +26,11 @@ module Utility {
         NORMAL,
 
         /**
+         * Fade old letters gradually
+         */
+        FADE,
+
+        /**
          * Don't render the overlay
          */
         NONE

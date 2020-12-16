@@ -20,9 +20,13 @@ declare module Utility {
          */
         NORMAL = 1,
         /**
+         * Fade old letters gradually
+         */
+        FADE = 2,
+        /**
          * Don't render the overlay
          */
-        NONE = 2
+        NONE = 3
     }
     /**
      * The mutation modes for letters
@@ -328,18 +332,28 @@ declare module Matrix {
     const DEFAULT_SYMBOLS = "\uFF66\uFF71\uFF73\uFF74\uFF75\uFF76\uFF77\uFF79\uFF7A\uFF7B\uFF7C\uFF7D\uFF7E\uFF7F\uFF80\uFF82\uFF83\uFF85\uFF86\uFF87\uFF88\uFF8A\uFF8B\uFF8E\uFF8F\uFF90\uFF91\uFF92\uFF93\uFF94\uFF95\uFF97\uFF98\uFF9C\u65E5(+*;)-|2589Z";
     const DEFAULT_SPEED = 16;
     const DEFAULT_LINE_LENGTH = 16;
+    const DEFAULT_UPDATE_RATE = 32;
     const DEFAULT_UPDATE_RATE_FX = 32;
     const DEFAULT_FX: MatrixFX.FX & {
+        /**
+         * Create the Matrix onto the specified selector. <br/>
+         * Note: The selector must match and return a &lt;canvas&gt; element!
+         *
+         * @param selector The dom selector
+         * @param size The initial container size
+         */
         setColor(_color: string | CanvasGradient | CanvasPattern): void;
         getColor(): string | CanvasGradient | CanvasPattern;
     };
     const DEFAULT_COMPOSITE_ALPHA = 0.3;
     const DEFAULT_COMPOSITE_MUTATION = true;
     const DEFAULT_MOVE_CHANCE = 0.51;
-    const DEFAULT_WAIT_TIME = 20;
+    const DEFAULT_WAIT_TIME = 3;
     const DEFAULT_MUTATION_CHANCE = 0.1;
     const DEFAULT_OVERLAY_MODE = Utility.OverlayMode.NORMAL;
     const DEFAULT_LETTER_MUTATION_MODE = Utility.LetterMutationMode.NORMAL;
+    const DEFAULT_SCALE_X = 1.2;
+    const DEFAULT_SCALE_Y = 1.2;
     const COLUMN_SIZE = 12;
     const MAX_SPEED = 32;
     const MAX_LINE_LENGTH = 32;
@@ -436,15 +450,25 @@ declare module Matrix {
          */
         function getLineLength(): number;
         /**
-         * Set the FX update rate
+         * Set the update rate
          *
-         * @param _ups The new FX update rate
+         * @param _ups The new update rate
          */
-        function setUpdateRateFX(_ups?: number): void;
+        function setUpdateRate(_ups?: number): void;
+        /**
+         * Get the current update rate
+         */
+        function getUpdateRate(): number;
+        /**
+         * Set the update rate
+         *
+         * @param _upsFX The new FX update rate
+         */
+        function setUpdateRateFX(_upsFX?: number): void;
         /**
          * Get the current FX update rate
          */
-        function getUpdateRate(): number;
+        function getUpdateRateFX(): number;
         /**
          * Set the {@link MatrixFX.FX} to be used
          *
@@ -517,5 +541,16 @@ declare module Matrix {
          * Get the current {@link Utility.LetterMutationMode LetterMutationMode}
          */
         function getLetterMutationMode(): Utility.LetterMutationMode;
+        /**
+         * Set the scale
+         *
+         * @param _scaleX The x scale
+         * @param _scaleY The y scale
+         */
+        function setScale(_scaleX: number, _scaleY?: number): void;
+        /**
+         * Get the current scale, scaleX being [0] and scaleY being [1]
+         */
+        function getScale(): number[];
     }
 }

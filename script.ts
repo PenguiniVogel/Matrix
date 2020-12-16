@@ -144,6 +144,16 @@ createSetting(
     `${(Settings.getUpdateRate() / 64.0) * 100.0}`,
     'Update rate:',
     'The update rate',
+    (val: number) => Settings.setUpdateRate(Math.ceil(val * (64.0 / 100.0))),
+    (val: number) => `${Math.max(1, Math.ceil(val * (64.0 / 100.0)))}`
+);
+
+createSetting(
+    'upsFX',
+    'range',
+    `${(Settings.getUpdateRateFX() / 64.0) * 100.0}`,
+    'FX Update rate:',
+    'The FX update rate',
     (val: number) => Settings.setUpdateRateFX(Math.ceil(val * (64.0 / 100.0))),
     (val: number) => `${Math.max(1, Math.ceil(val * (64.0 / 100.0)))}`
 );
@@ -232,6 +242,10 @@ createSelectSetting(
             selected: true
         },
         {
+            title: 'Fade',
+            onselect: () => Settings.setOverlayMode(Utility.OverlayMode.FADE)
+        },
+        {
             title: 'None',
             onselect: () => Settings.setOverlayMode(Utility.OverlayMode.NONE)
         }
@@ -263,6 +277,16 @@ createSelectSetting(
     ],
     'Mutation Mode:',
     'Set the letter mutation mode'
+);
+
+createSetting(
+    'scale',
+    'range',
+    `${Settings.getScale()[0] * 10}`,
+    'Scale:',
+    'Set the scale',
+    (val: number) => Settings.setScale(val / 10.0),
+    (val: number) => `${val / 10.0}`
 );
 
 // Matrix.debug_fx();

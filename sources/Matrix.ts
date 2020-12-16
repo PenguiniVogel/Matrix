@@ -13,15 +13,18 @@ module Matrix {
     export const DEFAULT_SYMBOLS = 'ｦｱｳｴｵｶｷｹｺｻｼｽｾｿﾀﾂﾃﾅﾆﾇﾈﾊﾋﾎﾏﾐﾑﾒﾓﾔﾕﾗﾘﾜ日(+*;)-|2589Z';
     export const DEFAULT_SPEED = 16;
     export const DEFAULT_LINE_LENGTH = 16;
+    export const DEFAULT_UPDATE_RATE = 32;
     export const DEFAULT_UPDATE_RATE_FX = 32;
     export const DEFAULT_FX = MatrixFX.BUILTIN_FX_COLOR;
     export const DEFAULT_COMPOSITE_ALPHA = 0.3;
     export const DEFAULT_COMPOSITE_MUTATION = true;
     export const DEFAULT_MOVE_CHANCE = 0.51;
-    export const DEFAULT_WAIT_TIME = 20;
+    export const DEFAULT_WAIT_TIME = 3;
     export const DEFAULT_MUTATION_CHANCE = 0.1;
     export const DEFAULT_OVERLAY_MODE = Utility.OverlayMode.NORMAL;
     export const DEFAULT_LETTER_MUTATION_MODE = Utility.LetterMutationMode.NORMAL;
+    export const DEFAULT_SCALE_X = 1.2;
+    export const DEFAULT_SCALE_Y = 1.2;
 
     export const COLUMN_SIZE = 12;
     export const MAX_SPEED = 32;
@@ -34,6 +37,9 @@ module Matrix {
 
     let width: number;
     let height: number;
+
+    let scaleX: number = DEFAULT_SCALE_X;
+    let scaleY: number = DEFAULT_SCALE_Y;
 
     let container: HTMLElement;
 
@@ -48,6 +54,9 @@ module Matrix {
 
     let bgCanvas: HTMLCanvasElement;
     let bgCtx: CanvasRenderingContext2D;
+
+    let bgColorCanvas: HTMLCanvasElement;
+    let bgColorCtx: CanvasRenderingContext2D;
 
     let characters: string;
     let characterSizes: number[];
@@ -68,6 +77,8 @@ module Matrix {
     let backgroundColor: Settings.Color = DEFAULT_BACKGROUND_COLOR;
     let speed: number = DEFAULT_SPEED;
     let lineLength: number = DEFAULT_LINE_LENGTH;
+
+    let ups: number = DEFAULT_UPDATE_RATE;
 
     let upsFX: number = DEFAULT_UPDATE_RATE_FX;
     let fx: MatrixFX.FX = DEFAULT_FX;
@@ -190,19 +201,20 @@ module Matrix {
         fgCanvas = document.createElement('canvas');
         canvas = document.createElement('canvas');
         bgCanvas = document.createElement('canvas');
+        bgColorCanvas = document.createElement('canvas');
 
-        let generalStyles = 'position: absolute;';
-
+        // let generalStyles = 'position: absolute;';
         // fgCanvas.setAttribute('style', `z-index: 3; ${generalStyles}`);
         // canvas.setAttribute('style', `z-index: 2; ${generalStyles}`);
         // bgCanvas.setAttribute('style', `z-index: 1; ${generalStyles}`);
-
         // container.append(fgCanvas, canvas, bgCanvas);
+
         container.append(targetCanvas);
 
         fgCtx = fgCanvas.getContext('2d');
         ctx = canvas.getContext('2d');
         bgCtx = bgCanvas.getContext('2d');
+        bgColorCtx = bgColorCanvas.getContext('2d');
 
         // Settings
         convertSymbols(DEFAULT_SYMBOLS);
@@ -274,6 +286,9 @@ module Matrix {
 
         bgCanvas.width = width;
         bgCanvas.height = height;
+
+        bgColorCanvas.width = width;
+        bgColorCanvas.height = height;
 
         fx.resize(width, height);
 
@@ -357,10 +372,10 @@ module Matrix {
         export function setBackgroundColor(_backgroundColor: Color = DEFAULT_BACKGROUND_COLOR): void {
             backgroundColor = _backgroundColor;
 
-            bgCtx.fillStyle = backgroundColor;
+            bgColorCtx.fillStyle = backgroundColor;
 
-            bgCtx.beginPath();
-            bgCtx.fillRect(0, 0, width, height);
+            bgColorCtx.beginPath();
+            bgColorCtx.fillRect(0, 0, width, height);
 
             fgCtx.fillStyle = backgroundColor;
 
@@ -400,9 +415,9 @@ module Matrix {
          * @param _speed The new speed
          */
         export function setSpeed(_speed: number = DEFAULT_SPEED): void {
-            if (_speed < 1 || _speed > MAX_SPEED) _speed = DEFAULT_SPEED;
+            if (_speed > MAX_SPEED) _speed = DEFAULT_SPEED;
 
-            speed = _speed;
+            speed = Math.max(1, _speed);
         }
 
         /**
@@ -447,20 +462,34 @@ module Matrix {
          */
 
         /**
-         * Set the FX update rate
+         * Set the update rate
          *
-         * @param _ups The new FX update rate
+         * @param _ups The new update rate
          */
-        export function setUpdateRateFX(_ups: number = DEFAULT_UPDATE_RATE_FX): void {
-            if (_ups < 1) _ups = DEFAULT_UPDATE_RATE_FX;
+        export function setUpdateRate(_ups: number = DEFAULT_UPDATE_RATE): void {
+            ups = Math.max(1, _ups);
+        }
 
-            upsFX = _ups;
+        /**
+         * Get the current update rate
+         */
+        export function getUpdateRate(): number {
+            return ups;
+        }
+
+        /**
+         * Set the update rate
+         *
+         * @param _upsFX The new FX update rate
+         */
+        export function setUpdateRateFX(_upsFX: number = DEFAULT_UPDATE_RATE_FX): void {
+            upsFX = Math.max(1, _upsFX);
         }
 
         /**
          * Get the current FX update rate
          */
-        export function getUpdateRate(): number {
+        export function getUpdateRateFX(): number {
             return upsFX;
         }
 
@@ -600,6 +629,28 @@ module Matrix {
             return letterMutationMode;
         }
 
+        /**
+         * Set the scale
+         *
+         * @param _scaleX The x scale
+         * @param _scaleY The y scale
+         */
+        export function setScale(_scaleX: number, _scaleY?: number) {
+            checkCreated('scale');
+
+            scaleX = Math.max(DEFAULT_SCALE_X, _scaleX);
+            scaleY = Math.max(DEFAULT_SCALE_Y, !!_scaleY ? _scaleY : _scaleX);
+
+            RenderEngine.recalculate_columns();
+        }
+
+        /**
+         * Get the current scale, scaleX being [0] and scaleY being [1]
+         */
+        export function getScale(): number[] {
+            return [scaleX, scaleY];
+        }
+
     }
 
     // --- Rendering
@@ -625,6 +676,7 @@ module Matrix {
         interface ColumnSegment {
             delay: number,
             y: number,
+            eraseY: number,
             letters: number[],
             length: number,
         }
@@ -641,7 +693,7 @@ module Matrix {
 
             for (let x = 0; x < width; x += COLUMN_SIZE) {
                 columns.push({
-                    wait: DEFAULT_WAIT_TIME + (DEFAULT_WAIT_TIME * moveChance * Math.random()),
+                    wait: DEFAULT_WAIT_TIME + Math.round(DEFAULT_WAIT_TIME * (1.0 - moveChance) * Math.random()),
                     x: x,
                     segments: [create_segment()]
                 });
@@ -653,151 +705,208 @@ module Matrix {
          */
         function create_segment(): ColumnSegment {
             let hLineLength = lineLength / 2.0;
+            let _length = Math.ceil(hLineLength + Math.random() * hLineLength);
+            let _letters = [];
+
+            for (let i = 0; i < _length; i ++) {
+                _letters.push(random_char());
+            }
 
             return {
                 delay: Math.ceil(5 + Math.random() * 15),
-                y: 0,
-                letters: [],
-                length: Math.ceil(hLineLength + Math.random() * hLineLength)
+                y: -((_length + 1) * COLUMN_SIZE),
+                eraseY: -(Math.ceil(_length + hLineLength) * COLUMN_SIZE),
+                letters: _letters,
+                length: _length
             };
         }
 
-        let columnsAccumulator = 0;
-        let colorAccumulator = 0;
+        let accumulatorRender = 0;
+        let accumulatorFX = 0;
 
         let background: BGBuffer;
 
         function render_columns(delta: number) {
-            if (columnsAccumulator >= 1000.0 / speed) {
-                // ctx.beginPath();
+            // ctx.beginPath();
+            if (overlayMode == Utility.OverlayMode.NORMAL) {
                 ctx.clearRect(0, 0, width, height);
                 fgCtx.clearRect(0, 0, width, height);
 
-                render_background();
+                fgCtx.beginPath();
+                fgCtx.fillRect(0, 0, width, height);
+            }
 
-                for (let l_Column of columns) {
-                    // randomly determine regarding speed whether a column should be moved.
-                    let move: boolean = (l_Column.wait -= delta) <= 0;
+            // render_background();
 
-                    if (move) {
-                        l_Column.wait = DEFAULT_WAIT_TIME + (DEFAULT_WAIT_TIME * moveChance * Math.random());
+            for (let l_Column of columns) {
+                let needsNext: boolean = true;
+
+                const x = l_Column.x;
+
+                for (let l_Segment of l_Column.segments) {
+                    if (l_Segment.delay > 0) {
+                        needsNext = false;
+
+                        l_Segment.delay -= 1;
+
+                        continue;
                     }
 
-                    let needsNext = move;
-                    for (let l_Segment of l_Column.segments) {
-                        if (l_Segment.delay > 0) {
-                            needsNext = false;
+                    if (l_Segment.length > 0) {
+                        needsNext = false;
 
-                            if (!move) continue;
-
-                            l_Segment.delay -= 1;
-
-                            continue;
-                        }
-
-                        // ensure max one letter gets changed
-                        let changedLetter: boolean = true;
-
-                        if (move) {
-                            changedLetter = false;
-
-                            if (l_Segment.letters.length < l_Segment.length) {
-                                l_Segment.letters.push(random_char());
-
-                                needsNext = false;
-                            } else {
-                                // ctx.beginPath();
-                                ctx.clearRect(l_Column.x, l_Segment.y, COLUMN_SIZE, COLUMN_SIZE);
-
-                                l_Segment.y += COLUMN_SIZE;
-                            }
-                        }
-
-                        if ((letterMutationMode == Utility.LetterMutationMode.NORMAL || letterMutationMode == Utility.LetterMutationMode.BOTH) &&
-                            l_Segment.letters.length > 1
-                        ) {
-                            l_Segment.letters.shift();
-                            l_Segment.letters.push(random_char());
-                        }
-
-                        for (let i = 0, l = l_Segment.letters.length; i < l; i ++) {
-                            let mutate = !changedLetter &&
-                                (letterMutationMode == Utility.LetterMutationMode.RANDOM || letterMutationMode == Utility.LetterMutationMode.BOTH) &&
-                                Math.random() < mutationChance;
-
-                            if (mutate) {
-                                changedLetter = true;
-
-                                l_Segment.letters[i] = random_char();
-
-                                paint_letter_mutation(l_Column.x, l_Segment.y + COLUMN_SIZE * i);
-                            } else {
-                                paint_letter(l_Segment.letters[i], l_Column.x, l_Segment.y + COLUMN_SIZE * i);
-
-                                if (overlayMode == Utility.OverlayMode.NORMAL && i + 1 < l) {
-                                    fgCtx.beginPath();
-                                    fgCtx.fillRect(l_Column.x, l_Segment.y - 8 + COLUMN_SIZE * i, COLUMN_SIZE, COLUMN_SIZE);
-                                }
-                            }
-                        }
+                        l_Segment.length -= 1;
                     }
 
-                    if (needsNext) {
-                        l_Column.segments.push(create_segment());
-                    }
+                    l_Segment.y += COLUMN_SIZE;
 
-                    l_Column.segments = l_Column.segments.filter(segment => segment.y - (COLUMN_SIZE * segment.length) < height);
+                    bgCtx.beginPath();
+                    bgCtx.clearRect(x, l_Segment.y, COLUMN_SIZE, l_Segment.letters.length * COLUMN_SIZE);
+
+                    for (let i = 0, l = l_Segment.letters.length; i < l; i ++) {
+                        const y = l_Segment.y + COLUMN_SIZE * i;
+
+                        paint_letter(l_Segment.letters[i], x, y);
+
+                        if (i + 1 == l) {
+                            fgCtx.clearRect(x, y, COLUMN_SIZE, COLUMN_SIZE);
+                        }
+                    }
                 }
 
-                if (overlayMode == Utility.OverlayMode.FULL) {
-                    fgCtx.beginPath();
-                    fgCtx.fillRect(0, 0, width, height);
+                // randomly determine whether a column should be moved.
+                // let move: boolean = (l_Column.wait -= 1) <= 0;
+                //
+                // if (move) {
+                //     l_Column.wait = DEFAULT_WAIT_TIME + Math.round(DEFAULT_WAIT_TIME * (1.0 - moveChance) * Math.random());
+                // }
+                //
+                // let needsNext = move;
+                // for (let l_Segment of l_Column.segments) {
+                //     if (l_Segment.delay > 0) {
+                //         needsNext = false;
+                //
+                //         if (!move) continue;
+                //
+                //         l_Segment.delay -= 1;
+                //
+                //         continue;
+                //     }
+                //
+                //     // ensure max one letter gets changed
+                //     let changedLetter: boolean = false;
+                //     // remove the first letter in the array
+                //     let shiftAfter: boolean = false;
+                //
+                //     if (move) {
+                //         if (l_Segment.length > -1) {
+                //             l_Segment.length -= 1;
+                //
+                //             needsNext = false;
+                //         }
+                //
+                //         if (letterMutationMode == Utility.LetterMutationMode.NORMAL || letterMutationMode == Utility.LetterMutationMode.BOTH) {
+                //             shiftAfter = true;
+                //             l_Segment.letters.push(random_char());
+                //         }
+                //
+                //         l_Segment.y += COLUMN_SIZE;
+                //         l_Segment.eraseY += COLUMN_SIZE;
+                //     }
+                //
+                //     for (let i = 0, l = l_Segment.letters.length; i < l; i++) {
+                //         let mutate = !changedLetter &&
+                //             (letterMutationMode == Utility.LetterMutationMode.RANDOM || letterMutationMode == Utility.LetterMutationMode.BOTH) &&
+                //             Math.random() < mutationChance;
+                //
+                //         if (mutate) {
+                //             changedLetter = true;
+                //
+                //             l_Segment.letters[i] = random_char();
+                //
+                //             paint_letter_mutation(l_Column.x, l_Segment.y + COLUMN_SIZE * i);
+                //         } else {
+                //             paint_letter(l_Segment.letters[i], l_Column.x, l_Segment.y + COLUMN_SIZE * i);
+                //
+                //             if ((overlayMode == Utility.OverlayMode.NORMAL || overlayMode == Utility.OverlayMode.FADE) && i + 1 == l) {
+                //                 fgCtx.clearRect(l_Column.x, l_Segment.y - 8 + COLUMN_SIZE * i, COLUMN_SIZE, COLUMN_SIZE);
+                //             }
+                //
+                //             if ((overlayMode == Utility.OverlayMode.NORMAL || overlayMode == Utility.OverlayMode.FADE) && i + 1 < l) {
+                //                 fgCtx.beginPath();
+                //                 fgCtx.fillRect(l_Column.x, l_Segment.y - 8 + COLUMN_SIZE * i, COLUMN_SIZE, COLUMN_SIZE);
+                //             }
+                //         }
+                //
+                //         // fgCtx.clearRect(l_Column.x, l_Segment.eraseY, COLUMN_SIZE, COLUMN_SIZE);
+                //         // ctx.clearRect(l_Column.x, l_Segment.eraseY, COLUMN_SIZE, COLUMN_SIZE);
+                //     }
+                //
+                //     if (shiftAfter) {
+                //         l_Segment.letters.shift();
+                //     }
+                // }
+                //
+
+                if (needsNext) {
+                    l_Column.segments.push(create_segment());
                 }
 
-                columnsAccumulator = 0;
+                l_Column.segments = l_Column.segments.filter(segment => segment.y - (COLUMN_SIZE * segment.length) < height);
+            }
+
+            if (overlayMode == Utility.OverlayMode.FULL) {
+                fgCtx.beginPath();
+                fgCtx.fillRect(0, 0, width, height);
             }
         }
 
         function render_background() {
-            ctx.globalAlpha = compositeAlpha;
+            // ctx.globalCompositeOperation = Utility.DrawingMode.DESTINATION_OVER;
+            bgCtx.clearRect(0, 0, width, height);
+            bgCtx.globalAlpha = compositeAlpha;
 
-            ctx.drawImage(background.html_canvas(), 0, 0);
+            bgCtx.drawImage(background.html_canvas(), 0, 0);
 
-            ctx.globalAlpha = 1.0;
+            bgCtx.globalAlpha = 1.0;
+            // ctx.globalCompositeOperation = Utility.DrawingMode.SOURCE_OVER;
         }
 
         function render_composite_color(/* delta: number */) {
             ctx.globalCompositeOperation = Utility.DrawingMode.SOURCE_ATOP;
-
-            if (colorAccumulator >= 1000.0 / upsFX) {
-                fx.draw();
-
-                colorAccumulator = 0;
-            }
+            bgCtx.globalCompositeOperation = Utility.DrawingMode.SOURCE_ATOP;
 
             fx.drawTo(ctx, width, height);
+            fx.drawTo(bgCtx, width, height);
 
             ctx.globalCompositeOperation = Utility.DrawingMode.SOURCE_OVER;
+            bgCtx.globalCompositeOperation = Utility.DrawingMode.SOURCE_OVER;
         }
 
         function render_process_normal(delta: number): void {
-            columnsAccumulator += delta;
+            // renders the background behind the columns
+            render_background();
 
+            // takes care of letter and fg layer
             render_columns(delta);
 
-            colorAccumulator += delta;
-
+            // renders fx into the dots and columns
             render_composite_color(/* delta */);
 
+            targetCanvasCtx.drawImage(bgColorCanvas, 0, 0);
             targetCanvasCtx.drawImage(bgCanvas, 0, 0);
-            targetCanvasCtx.drawImage(canvas, 0, 0);
-            targetCanvasCtx.drawImage(fgCanvas, 0, 0);
+
+            // targetCanvasCtx.globalCompositeOperation = Utility.DrawingMode.SOURCE_ATOP;
+            // targetCanvasCtx.drawImage(canvas, 0, 0);
+            // targetCanvasCtx.globalCompositeOperation = Utility.DrawingMode.SOURCE_OVER;
+            //
+            // targetCanvasCtx.drawImage(fgCanvas, 0, 0);
         }
 
         function render_process_debugFX(delta: number): void {
-            colorAccumulator += delta;
+            if (accumulatorFX >= 1000.0 / upsFX) {
+                accumulatorFX -= 1000.0 / upsFX;
 
-            if (colorAccumulator >= 1000.0 / upsFX) {
                 ctx.fillRect(0, 0, width, height);
 
                 render_composite_color(/* delta */);
@@ -817,7 +926,31 @@ module Matrix {
             function loop(timestamp) {
                 let delta = timestamp - lastRender;
 
-                render_process(delta);
+                accumulatorFX += delta;
+
+                if (accumulatorFX >= 1000.0 / upsFX) {
+                    accumulatorFX -= 1000.0 / upsFX;
+
+                    if (accumulatorFX >= 1000.0 / upsFX) {
+                        console.warn(`Skipping ${Math.ceil(accumulatorFX / (1000.0 / upsFX))} fx updates, is the update rate too fast?`);
+                        accumulatorFX = 0;
+                    }
+
+                    fx.draw();
+                }
+
+                accumulatorRender += delta;
+
+                if (accumulatorRender >= 1000.0 / ups) {
+                    accumulatorRender -= 1000.0 / ups;
+
+                    if (accumulatorRender >= 1000.0 / ups) {
+                        console.warn(`Skipping ${Math.ceil(accumulatorRender / (1000.0 / ups))} render updates, is the update rate too fast?`);
+                        accumulatorRender = 0;
+                    }
+
+                    render_process(delta);
+                }
 
                 lastRender = timestamp;
                 window.requestAnimationFrame(loop);
@@ -835,22 +968,28 @@ module Matrix {
         }
 
         function paint_reset(): void {
+            fgCtx.globalAlpha = compositeAlpha;
+
+            fgCtx.resetTransform();
+            fgCtx.scale(scaleX, scaleY);
+
             ctx.clearRect(0, 0, width, height);
 
-            ctx.scale(1.2, 1.2);
+            ctx.resetTransform();
+            ctx.scale(scaleX, scaleY);
 
             if (background) background.resize(width, height);
 
-            bgCtx.fillStyle = backgroundColor;
+            bgCtx.resetTransform();
+            bgCtx.scale(scaleX, scaleY);
 
-            bgCtx.scale(1.2, 1.2);
+            bgColorCtx.fillStyle = backgroundColor;
 
-            bgCtx.beginPath();
-            bgCtx.fillRect(0, 0, width, height);
+            bgColorCtx.resetTransform();
+            bgColorCtx.scale(scaleX, scaleY);
 
-            fgCtx.globalAlpha = compositeAlpha;
-
-            fgCtx.scale(1.2, 1.2);
+            bgColorCtx.beginPath();
+            bgColorCtx.fillRect(0, 0, width, height);
         }
 
         function paint_letter(char: number, x: number, y: number): void {
