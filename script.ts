@@ -11,6 +11,10 @@ Matrix.create('#matrix-container', {
     height: `${window.innerHeight}px`
 });
 
+if (window.location.href.indexOf('debug=1') != -1) {
+    Utility.allowDebug(true);
+}
+
 import Settings = Matrix.Settings;
 
 function createSetting(id: string, type: string, value: string, text: string, title: string, setOp: (val) => void, displayOp?: (val) => string): void {
@@ -29,6 +33,10 @@ function createSetting(id: string, type: string, value: string, text: string, ti
     input.id = id;
     input.type = type;
     input.value = value;
+
+    if (type == 'checkbox') {
+        input.checked = value == 'true';
+    }
 
     set.setAttribute('data-for', id);
     set.innerHTML = 'Set';
@@ -108,15 +116,15 @@ createSetting(
     (val: string) => Settings.setSymbols(val)
 );
 
-createSetting(
-    'speed',
-    'range',
-    `${(Settings.getSpeed() / Matrix.MAX_SPEED) * 100.0}`,
-    'Speed:',
-    'The line speed',
-    (val: number) => Settings.setSpeed(Math.ceil(val * (Matrix.MAX_SPEED / 100.0))),
-    (val: number) => `${Math.max(1, Math.ceil(val * (Matrix.MAX_SPEED / 100.0)))}`
-);
+// createSetting(
+//     'speed',
+//     'range',
+//     `${(Settings.getSpeed() / Matrix.MAX_SPEED) * 100.0}`,
+//     'Speed:',
+//     'The line speed',
+//     (val: number) => Settings.setSpeed(Math.ceil(val * (Matrix.MAX_SPEED / 100.0))),
+//     (val: number) => `${Math.max(1, Math.ceil(val * (Matrix.MAX_SPEED / 100.0)))}`
+// );
 
 createSetting(
     'lineLength',
@@ -141,11 +149,11 @@ createSetting(
 createSetting(
     'ups',
     'range',
-    `${(Settings.getUpdateRate() / 64.0) * 100.0}`,
+    `${Settings.getUpdateRate()}`,
     'Update rate:',
     'The update rate',
-    (val: number) => Settings.setUpdateRate(Math.ceil(val * (64.0 / 100.0))),
-    (val: number) => `${Math.max(1, Math.ceil(val * (64.0 / 100.0)))}`
+    (val: number) => Settings.setUpdateRate(Math.ceil(val)),
+    (val: number) => `${Math.max(1, Math.ceil(val))}`
 );
 
 createSetting(

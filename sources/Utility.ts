@@ -310,6 +310,34 @@ module Utility {
         return `rgba(${r}, ${g}, ${b}, ${a})`;
     }
 
+    // --- Debug
+
+    let _debug: boolean = false;
+
+    export function allowDebug(_allowDebug: boolean) {
+        _debug = _allowDebug;
+    }
+
+    export function debug(data: any) {
+        if (_debug) console.debug(data);
+    }
+
+    export function error(data: any) {
+        if (_debug) console.error(data);
+    }
+
+    export function warn(data: any) {
+        if (_debug) console.warn(data);
+    }
+
+    export function log(data: any) {
+        if (_debug) console.log(data);
+    }
+
+    export function info(data: any) {
+        if (_debug) console.info(data);
+    }
+
     // --- Buffer
 
     /**

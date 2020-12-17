@@ -11,9 +11,8 @@ module Matrix {
     export const DEFAULT_COLOR = '#44ff00';
     export const DEFAULT_BACKGROUND_COLOR: Settings.Color = '#000';
     export const DEFAULT_SYMBOLS = 'ｦｱｳｴｵｶｷｹｺｻｼｽｾｿﾀﾂﾃﾅﾆﾇﾈﾊﾋﾎﾏﾐﾑﾒﾓﾔﾕﾗﾘﾜ日(+*;)-|2589Z';
-    export const DEFAULT_SPEED = 16;
     export const DEFAULT_LINE_LENGTH = 16;
-    export const DEFAULT_UPDATE_RATE = 32;
+    export const DEFAULT_UPDATE_RATE = 12;
     export const DEFAULT_UPDATE_RATE_FX = 32;
     export const DEFAULT_FX = MatrixFX.BUILTIN_FX_COLOR;
     export const DEFAULT_COMPOSITE_ALPHA = 0.3;
@@ -75,7 +74,7 @@ module Matrix {
     }
 
     let backgroundColor: Settings.Color = DEFAULT_BACKGROUND_COLOR;
-    let speed: number = DEFAULT_SPEED;
+    // let speed: number = DEFAULT_SPEED;
     let lineLength: number = DEFAULT_LINE_LENGTH;
 
     let ups: number = DEFAULT_UPDATE_RATE;
@@ -93,87 +92,6 @@ module Matrix {
     let letterMutationMode: Utility.LetterMutationMode = DEFAULT_LETTER_MUTATION_MODE;
 
     // --- Creation
-
-    // OptionalSettings were removed with build 0409, please use Matrix.Settings.<setting>
-    // export interface OptionalSettings {
-    //
-    //     /**
-    //      * Set the initial container size
-    //      */
-    //     size?: {
-    //         /**
-    //          * The container css width
-    //          */
-    //         width: string,
-    //
-    //         /**
-    //          * The container css height
-    //          */
-    //         height: string
-    //     },
-    //
-    //     /**
-    //      * The initial color of the Matrix canvas
-    //      */
-    //     color?: string,
-    //
-    //     /**
-    //      * The initial background color
-    //      */
-    //     backgroundColor?: string,
-    //
-    //     /**
-    //      * The initial symbols of the Matrix
-    //      */
-    //     symbols?: string,
-    //
-    //     /**
-    //      * The initial speed of the columns
-    //      */
-    //     speed?: number,
-    //
-    //     /**
-    //      * The initial length of an column segment
-    //      */
-    //     lineLength?: number,
-    //
-    //     /*
-    //      * @deprecated
-    //      *
-    //     rotation?: number,
-    //      */
-    //
-    //     /**
-    //      * The initial update rate of the FX
-    //      */
-    //     updateRateFX?: number,
-    //
-    //     /*
-    //      * @deprecated
-    //      *
-    //     useFX?: boolean
-    //      */
-    //
-    //     /**
-    //      * The initial {@link MatrixFX.FX} to use
-    //      */
-    //     fx?: MatrixFX.FX,
-    //
-    //     /**
-    //      * The initial composite alpha for the Matrix canvas
-    //      */
-    //     compositeAlpha?: number,
-    //
-    //     /**
-    //      * The initial move chance of an column
-    //      */
-    //     moveChance?: number,
-    //
-    //     /**
-    //      * The initial mutation chance of an letter in a column segment
-    //      */
-    //     mutationChance?: number
-    // }
 
     /**
      * Create the Matrix onto the specified selector. <br/>
@@ -226,21 +144,6 @@ module Matrix {
         } else {
             resize();
         }
-        // if (settings) {
-        //     if (settings.size) resizeContainer(settings.size.width, settings.size.height);
-        //     if (settings.color) Settings.setColor(settings.color);
-        //     if (settings.backgroundColor) Settings.setBackgroundColor(settings.backgroundColor);
-        //     if (settings.symbols) Settings.setSymbols(settings.symbols);
-        //     if (settings.speed) Settings.setSpeed(settings.speed);
-        //     if (settings.lineLength) Settings.setLineLength(settings.lineLength);
-        //     // if (settings.rotation) Settings.setRotation(settings.rotation);
-        //     if (settings.updateRateFX) Settings.setUpdateRateFX(settings.updateRateFX);
-        //     // if (settings.useFX != null) Settings.setUseFX(settings.useFX);
-        //     if (settings.fx) Settings.setFX(settings.fx);
-        //     if (settings.compositeAlpha) Settings.setCompositeAlpha(settings.compositeAlpha);
-        //     if (settings.moveChance) Settings.setMoveChance(settings.moveChance);
-        //     if (settings.mutationChance) Settings.setMutationChance(settings.mutationChance);
-        // }
     }
 
     /**
@@ -410,24 +313,6 @@ module Matrix {
         }
 
         /**
-         * Set the speed of the Matrix columns
-         *
-         * @param _speed The new speed
-         */
-        export function setSpeed(_speed: number = DEFAULT_SPEED): void {
-            if (_speed > MAX_SPEED) _speed = DEFAULT_SPEED;
-
-            speed = Math.max(1, _speed);
-        }
-
-        /**
-         * Get the current speed of the Matrix columns
-         */
-        export function getSpeed(): number {
-            return speed;
-        }
-
-        /**
          * Set the <b>max</b> line length for the Matrix column segments
          *
          * @param _lineLength The new <b>max</b> line length
@@ -444,22 +329,6 @@ module Matrix {
         export function getLineLength(): number {
             return lineLength;
         }
-
-        /*
-         * @deprecated Rotation is not supported starting Build 2908, please implement your own rotation mechanism at your own risk of performance loss!
-         *
-        export function setRotation(_rotation: number): void {
-            throw new Error('Rotation is not supported starting Build 2908, please implement your own rotation mechanism at your own risk of performance loss!');
-        }
-         */
-
-        /*
-         * @deprecated Rotation is not supported starting Build 2908, please implement your own rotation mechanism at your own risk of performance loss!
-         *
-        export function getRotation(): number {
-            return 0;
-        }
-         */
 
         /**
          * Set the update rate
@@ -492,22 +361,6 @@ module Matrix {
         export function getUpdateRateFX(): number {
             return upsFX;
         }
-
-        /*
-         * @deprecated FX is always enabled by default since build 3108.
-         *
-        export function setUseFX(_useFX: boolean = false): void {
-            throw new Error('FX is always enabled by default since build 3108.');
-        }
-         */
-
-        /*
-         * @deprecated FX is always enabled by default since build 3108.
-         *
-        export function getUseFX(): boolean {
-            return true;
-        }
-         */
 
         /**
          * Set the {@link MatrixFX.FX} to be used
@@ -665,9 +518,9 @@ module Matrix {
          * Represents a column in the Matrix
          */
         interface Column {
-            wait: number,
             x: number,
-            segments: ColumnSegment[]
+            segments: ColumnSegment[],
+            nextWait: number
         }
 
         /**
@@ -676,7 +529,6 @@ module Matrix {
         interface ColumnSegment {
             delay: number,
             y: number,
-            eraseY: number,
             letters: number[],
             length: number,
         }
@@ -693,9 +545,9 @@ module Matrix {
 
             for (let x = 0; x < width; x += COLUMN_SIZE) {
                 columns.push({
-                    wait: DEFAULT_WAIT_TIME + Math.round(DEFAULT_WAIT_TIME * (1.0 - moveChance) * Math.random()),
                     x: x,
-                    segments: [create_segment()]
+                    segments: [create_segment()],
+                    nextWait: DEFAULT_WAIT_TIME
                 });
             }
         }
@@ -715,7 +567,6 @@ module Matrix {
             return {
                 delay: Math.ceil(5 + Math.random() * 15),
                 y: -((_length + 1) * COLUMN_SIZE),
-                eraseY: -(Math.ceil(_length + hLineLength) * COLUMN_SIZE),
                 letters: _letters,
                 length: _length
             };
@@ -726,25 +577,45 @@ module Matrix {
 
         let background: BGBuffer;
 
-        function render_columns(delta: number) {
-            // ctx.beginPath();
-            if (overlayMode == Utility.OverlayMode.NORMAL) {
-                ctx.clearRect(0, 0, width, height);
-                fgCtx.clearRect(0, 0, width, height);
+        function render_columns(/* delta: number */) {
+            switch (overlayMode) {
+                case Utility.OverlayMode.NONE:
+                    ctx.clearRect(0, 0, width, height);
+                    fgCtx.clearRect(0, 0, width, height);
 
-                fgCtx.beginPath();
-                fgCtx.fillRect(0, 0, width, height);
+                    break;
+                case Utility.OverlayMode.NORMAL:
+                case Utility.OverlayMode.FULL:
+                    ctx.clearRect(0, 0, width, height);
+                    fgCtx.clearRect(0, 0, width, height);
+
+                    fgCtx.beginPath();
+                    fgCtx.fillRect(0, 0, width, height);
+
+                    break;
+                case Utility.OverlayMode.FADE:
+                    fgCtx.beginPath();
+                    fgCtx.fillRect(0, 0, width, height);
+
+                    break;
             }
 
-            // render_background();
-
             for (let l_Column of columns) {
-                let needsNext: boolean = true;
+                let move: boolean = true;
+
+                if (l_Column.nextWait > 0) {
+                    l_Column.nextWait -= 1;
+                } else {
+                    l_Column.nextWait = DEFAULT_WAIT_TIME;
+                    move = Math.random() < moveChance;
+                }
+
+                let needsNext: boolean = move;
 
                 const x = l_Column.x;
 
                 for (let l_Segment of l_Column.segments) {
-                    if (l_Segment.delay > 0) {
+                    if (l_Segment.delay > 0 && move) {
                         needsNext = false;
 
                         l_Segment.delay -= 1;
@@ -758,106 +629,60 @@ module Matrix {
                         l_Segment.length -= 1;
                     }
 
-                    l_Segment.y += COLUMN_SIZE;
+                    let hasMutation: number = -1;
 
-                    bgCtx.beginPath();
+                    if (move) {
+                        l_Segment.y += COLUMN_SIZE;
+
+                        switch (letterMutationMode) {
+                            case Utility.LetterMutationMode.NORMAL:
+                                shift_letters(l_Segment);
+
+                                break;
+                            case Utility.LetterMutationMode.RANDOM:
+                                hasMutation = randomize_letter(l_Segment, hasMutation);
+
+                                break;
+                            case Utility.LetterMutationMode.BOTH:
+                                shift_letters(l_Segment);
+                                hasMutation = randomize_letter(l_Segment, hasMutation);
+
+                                break;
+                        }
+                    }
+
+                    // bgCtx.beginPath();
                     bgCtx.clearRect(x, l_Segment.y, COLUMN_SIZE, l_Segment.letters.length * COLUMN_SIZE);
 
                     for (let i = 0, l = l_Segment.letters.length; i < l; i ++) {
                         const y = l_Segment.y + COLUMN_SIZE * i;
 
-                        paint_letter(l_Segment.letters[i], x, y);
+                        if (i != hasMutation) {
+                            paint_letter(l_Segment.letters[i], x, y);
+                        } else {
+                            paint_letter_mutation(x, y);
+                        }
 
-                        if (i + 1 == l) {
+                        if (i + 1 == l && overlayMode != Utility.OverlayMode.FULL) {
                             fgCtx.clearRect(x, y, COLUMN_SIZE, COLUMN_SIZE);
                         }
                     }
-                }
 
-                // randomly determine whether a column should be moved.
-                // let move: boolean = (l_Column.wait -= 1) <= 0;
-                //
-                // if (move) {
-                //     l_Column.wait = DEFAULT_WAIT_TIME + Math.round(DEFAULT_WAIT_TIME * (1.0 - moveChance) * Math.random());
-                // }
-                //
-                // let needsNext = move;
-                // for (let l_Segment of l_Column.segments) {
-                //     if (l_Segment.delay > 0) {
-                //         needsNext = false;
-                //
-                //         if (!move) continue;
-                //
-                //         l_Segment.delay -= 1;
-                //
-                //         continue;
-                //     }
-                //
-                //     // ensure max one letter gets changed
-                //     let changedLetter: boolean = false;
-                //     // remove the first letter in the array
-                //     let shiftAfter: boolean = false;
-                //
-                //     if (move) {
-                //         if (l_Segment.length > -1) {
-                //             l_Segment.length -= 1;
-                //
-                //             needsNext = false;
-                //         }
-                //
-                //         if (letterMutationMode == Utility.LetterMutationMode.NORMAL || letterMutationMode == Utility.LetterMutationMode.BOTH) {
-                //             shiftAfter = true;
-                //             l_Segment.letters.push(random_char());
-                //         }
-                //
-                //         l_Segment.y += COLUMN_SIZE;
-                //         l_Segment.eraseY += COLUMN_SIZE;
-                //     }
-                //
-                //     for (let i = 0, l = l_Segment.letters.length; i < l; i++) {
-                //         let mutate = !changedLetter &&
-                //             (letterMutationMode == Utility.LetterMutationMode.RANDOM || letterMutationMode == Utility.LetterMutationMode.BOTH) &&
-                //             Math.random() < mutationChance;
-                //
-                //         if (mutate) {
-                //             changedLetter = true;
-                //
-                //             l_Segment.letters[i] = random_char();
-                //
-                //             paint_letter_mutation(l_Column.x, l_Segment.y + COLUMN_SIZE * i);
-                //         } else {
-                //             paint_letter(l_Segment.letters[i], l_Column.x, l_Segment.y + COLUMN_SIZE * i);
-                //
-                //             if ((overlayMode == Utility.OverlayMode.NORMAL || overlayMode == Utility.OverlayMode.FADE) && i + 1 == l) {
-                //                 fgCtx.clearRect(l_Column.x, l_Segment.y - 8 + COLUMN_SIZE * i, COLUMN_SIZE, COLUMN_SIZE);
-                //             }
-                //
-                //             if ((overlayMode == Utility.OverlayMode.NORMAL || overlayMode == Utility.OverlayMode.FADE) && i + 1 < l) {
-                //                 fgCtx.beginPath();
-                //                 fgCtx.fillRect(l_Column.x, l_Segment.y - 8 + COLUMN_SIZE * i, COLUMN_SIZE, COLUMN_SIZE);
-                //             }
-                //         }
-                //
-                //         // fgCtx.clearRect(l_Column.x, l_Segment.eraseY, COLUMN_SIZE, COLUMN_SIZE);
-                //         // ctx.clearRect(l_Column.x, l_Segment.eraseY, COLUMN_SIZE, COLUMN_SIZE);
-                //     }
-                //
-                //     if (shiftAfter) {
-                //         l_Segment.letters.shift();
-                //     }
-                // }
-                //
+                    if (overlayMode == Utility.OverlayMode.FADE) {
+                        fgCtx.globalAlpha = compositeAlpha * 2;
+
+                        fgCtx.beginPath();
+                        fgCtx.fillRect(x, l_Segment.y - COLUMN_SIZE, COLUMN_SIZE, COLUMN_SIZE);
+
+                        fgCtx.globalAlpha = compositeAlpha;
+                    }
+                }
 
                 if (needsNext) {
                     l_Column.segments.push(create_segment());
                 }
 
                 l_Column.segments = l_Column.segments.filter(segment => segment.y - (COLUMN_SIZE * segment.length) < height);
-            }
-
-            if (overlayMode == Utility.OverlayMode.FULL) {
-                fgCtx.beginPath();
-                fgCtx.fillRect(0, 0, width, height);
             }
         }
 
@@ -883,12 +708,12 @@ module Matrix {
             bgCtx.globalCompositeOperation = Utility.DrawingMode.SOURCE_OVER;
         }
 
-        function render_process_normal(delta: number): void {
+        function render_process_normal(/* delta: number */): void {
             // renders the background behind the columns
             render_background();
 
             // takes care of letter and fg layer
-            render_columns(delta);
+            render_columns(/* delta */);
 
             // renders fx into the dots and columns
             render_composite_color(/* delta */);
@@ -896,14 +721,14 @@ module Matrix {
             targetCanvasCtx.drawImage(bgColorCanvas, 0, 0);
             targetCanvasCtx.drawImage(bgCanvas, 0, 0);
 
-            // targetCanvasCtx.globalCompositeOperation = Utility.DrawingMode.SOURCE_ATOP;
-            // targetCanvasCtx.drawImage(canvas, 0, 0);
-            // targetCanvasCtx.globalCompositeOperation = Utility.DrawingMode.SOURCE_OVER;
-            //
-            // targetCanvasCtx.drawImage(fgCanvas, 0, 0);
+            targetCanvasCtx.globalCompositeOperation = Utility.DrawingMode.SOURCE_ATOP;
+            targetCanvasCtx.drawImage(canvas, 0, 0);
+            targetCanvasCtx.globalCompositeOperation = Utility.DrawingMode.SOURCE_OVER;
+
+            targetCanvasCtx.drawImage(fgCanvas, 0, 0);
         }
 
-        function render_process_debugFX(delta: number): void {
+        function render_process_debugFX(/* delta: number */): void {
             if (accumulatorFX >= 1000.0 / upsFX) {
                 accumulatorFX -= 1000.0 / upsFX;
 
@@ -913,7 +738,7 @@ module Matrix {
             }
         }
 
-        let render_process: (delta: number) => void = render_process_normal;
+        let render_process: (/* delta: number */) => void = render_process_normal;
 
         /**
          * Tell the RenderEngine to debug FX
@@ -932,7 +757,7 @@ module Matrix {
                     accumulatorFX -= 1000.0 / upsFX;
 
                     if (accumulatorFX >= 1000.0 / upsFX) {
-                        console.warn(`Skipping ${Math.ceil(accumulatorFX / (1000.0 / upsFX))} fx updates, is the update rate too fast?`);
+                        Utility.warn(`Skipping ${Math.ceil(accumulatorFX / (1000.0 / upsFX))} fx updates, is the update rate too fast?`);
                         accumulatorFX = 0;
                     }
 
@@ -945,11 +770,11 @@ module Matrix {
                     accumulatorRender -= 1000.0 / ups;
 
                     if (accumulatorRender >= 1000.0 / ups) {
-                        console.warn(`Skipping ${Math.ceil(accumulatorRender / (1000.0 / ups))} render updates, is the update rate too fast?`);
+                        Utility.warn(`Skipping ${Math.ceil(accumulatorRender / (1000.0 / ups))} render updates, is the update rate too fast?`);
                         accumulatorRender = 0;
                     }
 
-                    render_process(delta);
+                    render_process(/* delta */);
                 }
 
                 lastRender = timestamp;
@@ -992,12 +817,27 @@ module Matrix {
             bgColorCtx.fillRect(0, 0, width, height);
         }
 
+        function shift_letters(l_Segment: ColumnSegment) {
+            l_Segment.letters.push(random_char());
+            l_Segment.letters.shift();
+        }
+
+        function randomize_letter(l_Segment: ColumnSegment, hasMutation: number): number {
+            if (hasMutation == -1 && Math.random() < mutationChance) {
+                hasMutation = Math.floor((l_Segment.letters.length - 1) * Math.random());
+
+                l_Segment.letters[hasMutation] = random_char();
+            }
+
+            return hasMutation;
+        }
+
         function paint_letter(char: number, x: number, y: number): void {
             // ctx.beginPath();
             ctx.clearRect(x, y, COLUMN_SIZE, COLUMN_SIZE);
 
             ctx.beginPath();
-            ctx.strokeText(characters[char], x + 6 - characterSizes[char], y + 2, COLUMN_SIZE);
+            ctx.strokeText(characters[char], x + 1 + (COLUMN_SIZE / 2.0) - characterSizes[char], y + COLUMN_SIZE - 1, COLUMN_SIZE / 2.0);
         }
 
         function paint_letter_mutation(x: number, y: number) {
@@ -1007,7 +847,7 @@ module Matrix {
             ctx.globalAlpha = compositeMutation ? compositeAlpha : 1.0;
 
             ctx.beginPath();
-            ctx.fillRect(x + 2, y - 8, COLUMN_SIZE - 4, COLUMN_SIZE);
+            ctx.fillRect(x + 2, y + 1, COLUMN_SIZE - 4, COLUMN_SIZE - 2);
 
             ctx.globalAlpha = 1.0;
         }

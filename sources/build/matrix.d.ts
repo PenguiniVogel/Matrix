@@ -223,6 +223,12 @@ declare module Utility {
      * @param a The alpha (0.0 - 1.0), defaults to <code>1.0</code>
      */
     function color_rgba(r: number, g: number, b: number, a?: number): string;
+    function allowDebug(_allowDebug: boolean): void;
+    function debug(data: any): void;
+    function error(data: any): void;
+    function warn(data: any): void;
+    function log(data: any): void;
+    function info(data: any): void;
     /**
      * This class represents a canvas buffer that can be rendered to
      */
@@ -330,18 +336,10 @@ declare module Matrix {
     const DEFAULT_COLOR = "#44ff00";
     const DEFAULT_BACKGROUND_COLOR: Settings.Color;
     const DEFAULT_SYMBOLS = "\uFF66\uFF71\uFF73\uFF74\uFF75\uFF76\uFF77\uFF79\uFF7A\uFF7B\uFF7C\uFF7D\uFF7E\uFF7F\uFF80\uFF82\uFF83\uFF85\uFF86\uFF87\uFF88\uFF8A\uFF8B\uFF8E\uFF8F\uFF90\uFF91\uFF92\uFF93\uFF94\uFF95\uFF97\uFF98\uFF9C\u65E5(+*;)-|2589Z";
-    const DEFAULT_SPEED = 16;
     const DEFAULT_LINE_LENGTH = 16;
-    const DEFAULT_UPDATE_RATE = 32;
+    const DEFAULT_UPDATE_RATE = 12;
     const DEFAULT_UPDATE_RATE_FX = 32;
     const DEFAULT_FX: MatrixFX.FX & {
-        /**
-         * Create the Matrix onto the specified selector. <br/>
-         * Note: The selector must match and return a &lt;canvas&gt; element!
-         *
-         * @param selector The dom selector
-         * @param size The initial container size
-         */
         setColor(_color: string | CanvasGradient | CanvasPattern): void;
         getColor(): string | CanvasGradient | CanvasPattern;
     };
@@ -429,16 +427,6 @@ declare module Matrix {
          * Get the current symbols the Matrix is using
          */
         function getSymbols(): string;
-        /**
-         * Set the speed of the Matrix columns
-         *
-         * @param _speed The new speed
-         */
-        function setSpeed(_speed?: number): void;
-        /**
-         * Get the current speed of the Matrix columns
-         */
-        function getSpeed(): number;
         /**
          * Set the <b>max</b> line length for the Matrix column segments
          *
